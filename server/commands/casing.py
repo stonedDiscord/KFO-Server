@@ -796,7 +796,7 @@ def ooc_cmd_testimony_insert(client, arg):
     except ClientError:
         raise
 
-
+@mod_only()
 def ooc_cmd_cs(client, arg):
     """
     Start a one-on-one "Cross Swords" debate with targeted player!
@@ -895,7 +895,7 @@ def ooc_cmd_cs(client, arg):
         except AreaError as ex:
             raise ex
 
-
+@mod_only()
 def ooc_cmd_pta(client, arg):
     """
     Start a one-on-one "Panic Talk Action" debate with targeted player!
@@ -906,7 +906,7 @@ def ooc_cmd_pta(client, arg):
     args = arg.split()
     ooc_cmd_cs(client, f"{args[0]} 1")
 
-
+@mod_only()
 def set_minigame_song(client, minigame="", song="", end=False):
     minigames = ["cs", "sd", "pta"]
     start_or_end = "end" if end else "start"
@@ -942,7 +942,7 @@ def set_minigame_song(client, minigame="", song="", end=False):
         f"Play a song to set the {minigame} {start_or_end} song to...")
 
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_minigame_start_song(client, arg):
     """
     Edit a starting song for any specific minigame. If songname is blank, it lets you choose a song from the music list to use.
@@ -955,7 +955,7 @@ def ooc_cmd_minigame_start_song(client, arg):
     set_minigame_song(client, minigame, song, end=False)
 
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_minigame_end_song(client, arg):
     """
     Edit a ending song for any specific minigame. If songname is blank, it lets you choose a song from the music list to use.
@@ -966,7 +966,7 @@ def ooc_cmd_minigame_end_song(client, arg):
     song = " ".join(args[1:]) if len(args) > 1 else ""
     set_minigame_song(client, minigame, song, end=True)
 
-
+@mod_only()
 def ooc_cmd_concede(client, arg):
     """
     Concede a trial minigame and withdraw from either team you're part of.
@@ -994,7 +994,7 @@ def ooc_cmd_concede(client, arg):
         client.send_ooc("There is no minigame running right now.")
 
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_subtheme(client, arg):
     """
     Change the subtheme for the hub.

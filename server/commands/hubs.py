@@ -365,7 +365,7 @@ def ooc_cmd_area_switch(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_area_pref(client, arg):
     """
     Toggle a preference on/off for an area.
@@ -807,7 +807,7 @@ def ooc_cmd_info(client, arg):
         )
         database.log_area("info.change", client, client.area, message=arg)
 
-
+@mod_only()
 def ooc_cmd_gm(client, arg):
     """
     Add a game master for the current Hub.

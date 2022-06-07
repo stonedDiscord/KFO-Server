@@ -465,7 +465,7 @@ def ooc_cmd_pos_lock_clear(client, arg):
     client.area.pos_lock.clear()
     client.area.broadcast_ooc("Position lock cleared.")
 
-
+@mod_only()
 def ooc_cmd_knock(client, arg):
     """
     Knock on the target area ID to call on their attention to your area.
@@ -534,7 +534,7 @@ def ooc_cmd_knock(client, arg):
     except (AreaError, ClientError):
         raise
 
-
+@mod_only()
 def ooc_cmd_peek(client, arg):
     """
     Peek into an area to see if there's people in it.
@@ -623,7 +623,7 @@ def ooc_cmd_peek(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_max_players(client, arg):
     """
     Set a max amount of players for current area between -1 and 99.
