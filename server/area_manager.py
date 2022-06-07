@@ -645,8 +645,6 @@ class AreaManager:
         for client in clients:
             for area in client.local_area_list:
                 status = area.status
-                if status == "IDLE":
-                    status = ""
                 status_list.append(status)
             self.server.send_arup(client, status_list)
 
