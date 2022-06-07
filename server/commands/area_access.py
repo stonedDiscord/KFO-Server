@@ -356,14 +356,18 @@ def ooc_cmd_links(client, arg):
             # Can't see hidden links
             if not client.is_mod and client not in client.area.owners:
                 continue
-            hidden = "📦"
-
+            hidden = ' [H]'
+        
         if len(value["evidence"]) > 0 and not (client.hidden_in in value["evidence"]):
             # Can't see hidden links
             if not client.is_mod and client not in client.area.owners:
                 continue
+<<<<<<< HEAD
             evi_list = ", ".join(str(evi + 1) for evi in value["evidence"])
             hidden = f"📦:{evi_list}"
+=======
+            hidden = f' [evi:{value["evidence"]}]'
+>>>>>>> parent of 0355de7... Box emoji for hiding (haha metal gear reference), 'zzz' for AFK status
 
         try:
             area_name = f' - "{client.area.area_manager.get_area_by_id(int(key)).name}"'
