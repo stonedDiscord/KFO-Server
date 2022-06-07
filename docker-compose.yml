@@ -4,8 +4,8 @@ services:
         build: .
         image: tsuserver
         ports:
-            - 27016:27016
-            - 50001:50001
+            - 27017:27017
+            - 27018:27018
         volumes:
             - ./storage:/app/storage
             - ./logs:/app/logs
