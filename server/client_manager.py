@@ -1253,13 +1253,13 @@ class ClientManager:
             for c in sorted_clients:
                 info += "\r\n"
                 if c.is_mod:
-                    info += "[M]"
+                    info += "[M] "
                 elif c in area.area_manager.owners:
-                    info += "[GM]"
+                    info += "[GM] "
                 elif c in area._owners:
-                    info += "[CM]"
+                    info += "[CM] "
                 if c in area.afkers:
-                    info += '[AFK]'
+                    info += "[AFK] "
                 if c.hidden:
                     name = ''
                     if c.hidden_in != None:
