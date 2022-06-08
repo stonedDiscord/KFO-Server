@@ -350,6 +350,7 @@ def ooc_cmd_online(client, _):
     client.send_player_count()
 
 
+@mod_only()
 def ooc_cmd_mods(client, arg):
     """
     Show a list of moderators online.
