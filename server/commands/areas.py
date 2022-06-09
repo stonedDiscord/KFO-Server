@@ -288,7 +288,7 @@ def ooc_cmd_uninvite(client, arg):
         client.send_ooc("No targets found.")
 
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.
