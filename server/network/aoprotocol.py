@@ -973,6 +973,8 @@ class AOProtocol(asyncio.Protocol):
                 if client.is_mod or client in self.client.area.owners:
                     whisper_clients.append(client)
 
+        self.client.area.set_next_msg_delay(len(msg))
+
         if len(target_area) > 0:
             try:
                 for a in target_area:

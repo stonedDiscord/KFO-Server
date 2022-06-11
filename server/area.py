@@ -227,6 +227,7 @@ class Area:
 
         self.music_looper = None
         self.next_message_time = 0
+        self.next_message_delay = 100
         self.judgelog = []
         self.music = ""
         self.music_player = ""
@@ -861,6 +862,15 @@ class Area:
                 c.send_command(cmd, *args)
                 if c.area.background != bg:
                     c.send_command("BN", c.area.background)
+
+    def set_next_msg_delay(self, msg_length: int):
+        """Set the delay when the next IC message can be send by any client.
+        Args:
+            msg_length (int): estimated length of message (ms)
+        """
+
+        delay = min(2900, 60 * msg_length)
+        self.next_message_time = round(time.time() * 1000.0 + delay + self.next_message_delay)
 
     def broadcast_ooc(self, msg):
         """
