@@ -415,7 +415,7 @@ class TsuServer3:
         else:
             as_mod = ""
         ooc_name = (
-            f"<dollar>G[{client.area.area_manager.abbreviation}]|{as_mod}{client.name}"
+            f"<dollar>G[{client.area.abbreviation}]|{as_mod}{client.name}"
         )
         self.send_all_cmd_pred("CT", ooc_name, msg,
                                pred=lambda x: not x.muted_global)
