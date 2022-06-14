@@ -40,7 +40,7 @@ def ooc_cmd_g(client, arg):
     client.server.broadcast_global(client, arg, client.is_mod)
     database.log_area("chat.global", client, client.area, message=arg)
 
-
+@mod_only()
 def ooc_cmd_h(client, arg):
     """
     Broadcast a hub-wide message.
