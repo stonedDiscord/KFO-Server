@@ -1265,17 +1265,12 @@ class ClientManager:
                     if c.hidden_in != None:
                         name = f':{c.area.evi_list.evidences[c.hidden_in].name}'
                     info += f'[HID{name}] '
-                info += f'[{c.id}] '
-                if c.showname != c.char_name:
-                    info += f'"{c.showname}" ({c.char_name})'
-                else:
-                    info += f"{c.showname}"
+                info += f'[{c.id}] {c.char_name}'
+                info += f' ({c.showname})'
                 if c.pos != "":
                     info += f" <{c.pos}>"
                 if self.is_mod:
-                    info += f" ({c.ipid})"
-                if c.name != "" and (self.is_mod or self in area.owners):
-                    info += f": {c.name}"
+                    info += f" ({c.ipid}): {c.name}"
             return info
 
         def send_area_info(self, area_id, mods, afk_check=False):
