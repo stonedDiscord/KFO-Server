@@ -628,6 +628,7 @@ class AOProtocol(asyncio.Protocol):
                 len(re.sub(r"[{}\\`|(~~)]", "", text).replace(" ", "")) < 3
                 and not text.startswith("<")
                 and not text.startswith(">")
+                and not text.startswith("=")
             ):
                 self.client.send_ooc(
                     "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
@@ -697,7 +698,7 @@ class AOProtocol(asyncio.Protocol):
                     "That does not look like a valid area ID!")
                 return
         if len(self.client.area.testimony) > 0 and (
-            text.lstrip().startswith(">") or text.lstrip().startswith("<")
+            text.lstrip().startswith(">") or text.lstrip().startswith("<") or text.lstrip().startswith("=")
         ):
             if self.client.area.recording is True:
                 self.client.send_ooc("It is not cross-examination yet!")
@@ -717,6 +718,8 @@ class AOProtocol(asyncio.Protocol):
                     idx += 1
                 if cmd == "<":
                     idx -= 1
+                if cmd == "=":
+                    idx = idx
                 idx = idx % len(self.client.area.testimony)
             try:
                 self.client.area.testimony_send(idx)
@@ -1326,9 +1329,7 @@ class AOProtocol(asyncio.Protocol):
             return
 
         prefix = ""
-        if self.client.is_mod:
-            prefix = "[M]"
-        elif self.client in self.client.area.area_manager.owners:
+        if self.client in self.client.area.area_manager.owners:
             prefix = "[GM]"
         elif self.client in self.client.area._owners:
             name = "[CM]"
