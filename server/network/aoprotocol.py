@@ -295,16 +295,15 @@ class AOProtocol(asyncio.Protocol):
         """
 
         song_list = []
-        if len(self.client.server.hub_manager.hubs) <= 1:
-            self.client.area.area_manager.arup_enabled = True
-        elif not self.client.area.area_manager.arup_enabled:
-            song_list = [
-                f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
-            ]
-        else:
-            song_list = [
-                f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}"
-            ]
+        if len(self.client.server.hub_manager.hubs) > 1:
+            if not self.client.area.area_manager.arup_enabled:
+                song_list = [
+                    f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
+                ]
+            else:
+                song_list = [
+                    f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}"
+                ]
         allowed = self.client.is_mod or self.client in self.client.area.owners
         area_list = self.client.get_area_list(allowed, allowed)
         self.client.local_area_list = area_list
@@ -1101,7 +1100,7 @@ class AOProtocol(asyncio.Protocol):
                     and self.client.area.id == self.server.bridgebot.area_id
                 ):
                     webname = self.client.char_name
-                    if showname != "" and showname != self.area.area_manager.char_list[cid]:
+                    if showname != "" and showname != self.client.area.area_manager.char_list[cid]:
                         webname = f"{showname} ({webname})"
                     # you'll hate me for this
                     text = (
