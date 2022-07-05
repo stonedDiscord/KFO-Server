@@ -122,8 +122,8 @@ class AOProtocol(asyncio.Protocol):
             self.server.config["timeout"], self.client.disconnect
         )
 
-        # Idk why AO2 even expects a decryptor packet but here we are
-        self.client.send_command("decryptor", 34)
+        # Disables fantacrypt for clients older than 2.9, required for A02-Client to send HDID.
+        self.client.send_command("decryptor", "NOENCRYPT")
 
     def connection_lost(self, exc):
         """User disconnected
@@ -295,16 +295,15 @@ class AOProtocol(asyncio.Protocol):
         """
 
         song_list = []
-        if len(self.client.server.hub_manager.hubs) <= 1:
-            self.client.area.area_manager.arup_enabled = True
-        elif not self.client.area.area_manager.arup_enabled:
-            song_list = [
-                f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
-            ]
-        else:
-            song_list = [
-                f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}"
-            ]
+        if len(self.client.server.hub_manager.hubs) > 1:
+            if not self.client.area.area_manager.arup_enabled:
+                song_list = [
+                    f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
+                ]
+            else:
+                song_list = [
+                    f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}"
+                ]
         allowed = self.client.is_mod or self.client in self.client.area.owners
         area_list = self.client.get_area_list(allowed, allowed)
         self.client.local_area_list = area_list
@@ -1101,7 +1100,7 @@ class AOProtocol(asyncio.Protocol):
                     and self.client.area.id == self.server.bridgebot.area_id
                 ):
                     webname = self.client.char_name
-                    if showname != "" and showname != self.area.area_manager.char_list[cid]:
+                    if showname != "" and showname != self.client.area.area_manager.char_list[cid]:
                         webname = f"{showname} ({webname})"
                     # you'll hate me for this
                     text = (
