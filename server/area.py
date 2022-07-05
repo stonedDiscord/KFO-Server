@@ -1189,7 +1189,7 @@ class Area:
                 client.send_ooc(
                     "Maximum testimony statement amount reached! (30)")
                 return
-            if !(client in self.owners):
+            if not (client in self.owners):
                 client.send_ooc(
                     "You need to be CM to record testimonies")
                 return
