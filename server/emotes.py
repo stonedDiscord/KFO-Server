@@ -84,10 +84,15 @@ class Emotes:
             )
             return
 
-    def validate(self, preanim, anim, sfx):
+    def validate(self, preanim, anim, sfx, shake, realization, framesfx):
         """
         Determines whether or not an emote canonically belongs to this
         character (that is, it is defined server-side).
+
+        Frame FX examples:
+        frames_shake       damage|2=1^(b)strained^(a)strained^
+        frames_realization damage|1=1^(b)strained^(a)strained^
+        framesfx           damage|1=sfx-stab2^(b)strained^(a)strained^
         """
         # There are no emotes loaded, so allow anything
         if len(self.emotes) == 0:

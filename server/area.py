@@ -1289,7 +1289,7 @@ class Area:
         delay = min(self.max_msg_delay, delay)
         return delay
 
-    def is_iniswap(self, client, preanim, anim, char, sfx):
+    def is_iniswap(self, client, preanim, anim, char, sfx, shake, realization, framesfx):
         """
         Determine if a client is performing an INI swap.
         :param client: client attempting the INI swap.
@@ -1310,7 +1310,7 @@ class Area:
                 if client.char_name in char_link and char in char_link:
                     return False
             return True
-        return not self.server.char_emotes[char].validate(preanim, anim, sfx)
+        return not self.server.char_emotes[char].validate(preanim, anim, sfx, shake, realization, framesfx)
 
     def clear_music(self):
         self.music_list.clear()
