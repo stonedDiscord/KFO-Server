@@ -144,6 +144,8 @@ class TsuServer3:
                 new_websocket_client(
                     self), bound_ip, self.config["websocket_port"]
             )
+            print("Websocket Server started and is listening on port {}".format(
+            self.config["websocket_port"]))
             asyncio.ensure_future(ao_server_ws)
 
         if self.config["use_masterserver"]:
