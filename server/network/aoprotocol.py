@@ -23,6 +23,8 @@ from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server import database
 import time
 import arrow
+from google.oauth2 import id_token
+from google.auth.transport import requests
 from enum import Enum
 import asyncio
 import re
@@ -190,9 +192,56 @@ class AOProtocol(asyncio.Protocol):
             return
         hdid = self.client.hdid = args[0]
         ipid = self.client.ipid
-
         database.add_hdid(ipid, hdid)
         ban = database.find_ban(ipid, hdid)
+        if ban is not None:
+            if ban.unban_date is not None:
+                unban_date = arrow.get(ban.unban_date)
+            else:
+                unban_date = "N/A"
+
+            msg = f"{ban.reason}\r\n"
+            msg += f"ID: {ban.ban_id}\r\n"
+            msg += f"Until: {unban_date.humanize()}"
+
+            database.log_connect(self.client, failed=True)
+            self.client.send_command("BD", msg)
+            self.client.disconnect()
+            return
+        elif self.server.config["secondfactor"] is False:
+            self.client.is_checked = True
+
+        database.log_connect(self.client, failed=False)
+        self.client.send_command(
+            "ID", self.client.id, self.server.software, self.server.version
+        )
+        self.client.send_command(
+            "PN", self.server.player_count, self.server.config["playerlimit"]
+        )
+
+    def net_cmd_2t(self, args):
+        """Two factor
+
+        2T#<oauth2 token:string>#%
+
+        :param args: a list containing all the arguments
+
+        """
+        if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
+            return
+
+        oauth = args[0]
+        ipid = self.client.ipid
+        CLIENT_ID = "107239014890-eo1vg90jdn2l7fgudsp9mdk8c1nraq0g.apps.googleusercontent.com"
+        try:
+            idinfo = id_token.verify_oauth2_token(oauth, requests.Request(), CLIENT_ID)
+            userid = idinfo['sub']
+        except ValueError:
+            return
+
+        self.client.userid = userid
+
+        ban = database.find_ban(ipid, userid)
         if ban is not None:
             if ban.unban_date is not None:
                 unban_date = arrow.get(ban.unban_date)
@@ -212,10 +261,7 @@ class AOProtocol(asyncio.Protocol):
 
         database.log_connect(self.client, failed=False)
         self.client.send_command(
-            "ID", self.client.id, self.server.software, self.server.version
-        )
-        self.client.send_command(
-            "PN", self.server.player_count, self.server.config["playerlimit"]
+            "2A", "none"
         )
 
     def net_cmd_id(self, args):
@@ -230,6 +276,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.disconnect()
             return
         self.client.version = args[1]
+        self.client.clientname = args[0]
         preflist = self.client.server.supported_features.copy()
         if not self.client.area.area_manager.arup_enabled and "arup" in preflist:
             preflist.remove("arup")
@@ -246,6 +293,9 @@ class AOProtocol(asyncio.Protocol):
                 # Let them hear ambience
                 self.client.has_multilayer_audio = True
 
+        if self.server.config["secondfactor"] is True and self.client.clientname != "webAO":
+            self.client.is_checked = True
+
         # If we have someone using the DRO 1.1.0 Client joining
         # if self.client.version.startswith("1.1.0"):
         # DRO Client partial support.
@@ -254,6 +304,9 @@ class AOProtocol(asyncio.Protocol):
         # Send Asset packet if asset_url is defined
         if self.server.config["asset_url"] != "":
             self.client.send_command("ASS", self.server.config["asset_url"])
+
+        if self.server.config["secondfactor"] is True:
+            self.client.send_command("2A", "block")
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
@@ -1792,6 +1845,7 @@ class AOProtocol(asyncio.Protocol):
 
     net_cmd_dispatcher = {
         "HI": net_cmd_hi,  # handshake
+        "2T": net_cmd_2t,  # 2FA handshake
         "ID": net_cmd_id,  # client version
         "CH": net_cmd_ch,  # keepalive
         "askchaa": net_cmd_askchaa,  # ask for list lengths
