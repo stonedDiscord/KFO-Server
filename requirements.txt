@@ -5,4 +5,3 @@ timeparse-plus
 geoip2
 discord
 pystun3
-google-auth

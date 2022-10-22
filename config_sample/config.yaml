@@ -82,9 +82,6 @@ wtce_floodguard:
 # How many subscripts zalgo is stripped by; 3 is recommended as not to hurt special language diacritics
 zalgo_tolerance: 3
 
-# Require additional verification for web users?
-secondfactor: false
-
 # How many simultaneous connections an IP address can make to the server. (Default: 16)
 multiclient_limit: 16
 

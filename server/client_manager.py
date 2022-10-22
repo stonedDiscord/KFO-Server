@@ -45,7 +45,6 @@ class ClientManager:
             self.is_checked = False
             self.transport = transport
             self.hdid = ""
-            self.userid = None
             self.id = user_id
             self.char_id = None
             self.area = server.hub_manager.default_hub().default_area()
