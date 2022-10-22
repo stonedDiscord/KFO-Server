@@ -298,6 +298,8 @@ class TsuServer3:
             self.config["block_repeat"] = True
         if "block_relative" not in self.config:
             self.config["block_relative"] = False
+        if "secondfactor" not in self.config:
+            self.config["secondfactor"] = False
 
     def load_command_aliases(self):
         """Load a list of banned words to scrub from chats."""
