@@ -204,6 +204,9 @@ def kickban(client, arg, ban_hdid):
                 if ban_hdid:
                     database.ban(c.hdid, reason,
                                  ban_type="hdid", ban_id=ban_id)
+                    if c.userid:
+                        database.ban(c.userid, reason,
+                                     ban_type="hdid", ban_id=ban_id)
                     hdid = c.hdid
                 c.send_command("KB", reason)
                 c.disconnect()
