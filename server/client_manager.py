@@ -1279,7 +1279,7 @@ class ClientManager:
             )
             for c in sorted_clients:
                 info += "\r\n"
-                if c.is_mod:
+                if c.is_mod and self.is_mod:
                     info += "[M] "
                 elif c in area.area_manager.owners:
                     info += "[GM] "
