@@ -351,11 +351,11 @@ class AOProtocol(asyncio.Protocol):
         if len(self.client.server.hub_manager.hubs) > 1:
             if not self.client.area.area_manager.arup_enabled:
                 song_list = [
-                    f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
+                    f"🌍[{self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
                 ]
             else:
                 song_list = [
-                    f"[HUB: {self.client.area.area_manager.id}] {self.client.area.area_manager.name}"
+                    f"🌍[{self.client.area.area_manager.id}] {self.client.area.area_manager.name}"
                 ]
         allowed = self.client.is_mod or self.client in self.client.area.owners
         area_list = self.client.get_area_list(allowed, allowed)
@@ -668,35 +668,44 @@ class AOProtocol(asyncio.Protocol):
                 "You may not iniswap while you are charcursed!")
             return
         if (self.server.config["block_relative"]):
-            pre = pre.replace("../","").replace("/..","").replace("..\\","").replace("\\..","")
-            anim = anim.replace("../","").replace("/..","").replace("..\\","").replace("\\..","")
-            folder = folder.replace("../","").replace("/..","").replace("..\\","").replace("\\..","")
-            sfx = sfx.replace("../","").replace("/..","").replace("..\\","").replace("\\..","")
-            pos = pos.replace("../","").replace("/..","").replace("..\\","").replace("\\..","")
-            frames_shake = frames_shake.replace("../","").replace("/..","").replace("..\\","").replace("\\..","")
-            frames_realization = frames_realization.replace("../","").replace("/..","").replace("..\\","").replace("\\..","")
-            frames_sfx = frames_sfx.replace("../","").replace("/..","").replace("..\\","").replace("\\..","")
-            effect = effect.replace("../","").replace("/..","").replace("..\\","").replace("\\..","")
-        
-        if (
-            not self.client.area.blankposting_allowed
-            and not self.client.is_mod
-            and not (self.client in self.client.area.owners)
-        ):
-            if text.strip() == "":
-                self.client.send_ooc("Blankposting is forbidden in this area!")
-                return
-            # Regex is slow as hell, need to change this to be more performant
-            if (
-                len(re.sub(r"[{}\\`|(~~)]", "", text).replace(" ", "")) < 3
-                and not text.startswith("<")
-                and not text.startswith(">")
-                and not text.startswith("=")
-            ):
-                self.client.send_ooc(
-                    "While that is not a blankpost, it is still pretty spammy. Try forming sentences."
-                )
-                return
+            pre = pre.replace(
+                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+            anim = anim.replace(
+                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+            folder = folder.replace(
+                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+            sfx = sfx.replace(
+                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+            pos = pos.replace(
+                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+            frames_shake = frames_shake.replace(
+                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+            frames_realization = frames_realization.replace(
+                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+            frames_sfx = frames_sfx.replace(
+                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+            effect = effect.replace(
+                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+
+        if not self.client.is_mod and not (self.client in self.client.area.owners):
+            if not self.client.area.blankposting_allowed:
+                # Regex is slow as hell, need to change this to be more performant
+                if text.strip() == "" or (
+                    len(re.sub(r"[{}\\`|(~~)]", "", text).replace(" ", "")) < 3
+                    and not text.startswith("<")
+                    and not text.startswith(">")
+                ):
+                    self.client.send_ooc(
+                        "Blankposting is forbidden in this area!"
+                    )
+                    return
+            elif self.client.area.blankposting_forced:
+                if text.strip() != "":
+                    self.client.send_ooc(
+                        "You can only blankpost in this area!"
+                    )
+                    return
+
         if text.replace(" ", "").startswith("(("):
             self.client.send_ooc(
                 "Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /h to talk across the hub, or /g to talk across the entire server."
@@ -1209,37 +1218,37 @@ class AOProtocol(asyncio.Protocol):
             additive = 0
 
         self.client.area.send_ic(
-            self.client,
-            msg_type,
-            pre,
-            folder,
-            anim,
-            msg,
-            pos,
-            sfx,
-            emote_mod,
-            cid,
-            sfx_delay,
-            button,
-            evidence,
-            flip,
-            ding,
-            color,
-            showname,
-            charid_pair,
-            other_folder,
-            other_emote,
-            offset_pair,
-            other_offset,
-            other_flip,
-            nonint_pre,
-            sfx_looping,
-            screenshake,
-            frames_shake,
-            frames_realization,
-            frames_sfx,
-            additive,
-            effect,
+            client=self.client,
+            msg_type=msg_type,
+            pre=pre,
+            folder=folder,
+            anim=anim,
+            msg=msg,
+            pos=pos,
+            sfx=sfx,
+            emote_mod=emote_mod,
+            cid=cid,
+            sfx_delay=sfx_delay,
+            button=button,
+            evidence=evidence,
+            flip=flip,
+            ding=ding,
+            color=color,
+            showname=showname,
+            charid_pair=charid_pair,
+            other_folder=other_folder,
+            other_emote=other_emote,
+            offset_pair=offset_pair,
+            other_offset=other_offset,
+            other_flip=other_flip,
+            nonint_pre=nonint_pre,
+            sfx_looping=sfx_looping,
+            screenshake=screenshake,
+            frames_shake=frames_shake,
+            frames_realization=frames_realization,
+            frames_sfx=frames_sfx,
+            additive=additive,
+            effect=effect,
             targets=whisper_clients,
         )
         self.client.area.send_owner_ic(
@@ -1352,14 +1361,13 @@ class AOProtocol(asyncio.Protocol):
                 False,
             )
 
-        # All validation checks passed, set the name
-        if self.client.name != args[0] and self.client.fake_name != args[0]:
-            if self.client.is_valid_name(args[0]):
-                self.client.name = args[0]
-                self.client.fake_name = args[0]
-            else:
-                self.client.fake_name = args[0]
+        if not self.client.is_valid_name(args[0]):
+            self.client.send_ooc(
+                "Your OOC name is invalid!"
+            )
+            return
 
+        self.client.name = args[0]
         if args[1].lstrip() != args[1] and args[1].lstrip().startswith("/"):
             self.client.send_ooc(
                 "Your message was not sent for safety reasons: you left space before that slash."
@@ -1419,7 +1427,7 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.is_checked:
             return
 
-        if args[0].split(":")[0] == "[HUB":
+        if args[0].split()[0].startswith("🌍["):
             # self.client.send_ooc('Switching to the list of Hubs...')
             self.client.viewing_hub_list = True
             preflist = self.client.server.supported_features.copy()
@@ -1434,7 +1442,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_command(
                 "FA",
                 *[
-                    "{ Hubs }\n Double-Click me to see Areas\n  _______",
+                    "🌐 Hubs 🌐\n Double-Click me to see Areas\n  _______",
                     *[
                         f"[{hub.id}] {hub.name} (users: {hub.count})"
                         for hub in self.client.server.hub_manager.hubs
@@ -1442,7 +1450,7 @@ class AOProtocol(asyncio.Protocol):
                 ],
             )
             return
-        if args[0].split("\n")[0] == "{ Hubs }":
+        if args[0].split("\n")[0] == "🌐 Hubs 🌐":
             # self.client.send_ooc('Switching to the list of Areas...')
             self.client.viewing_hub_list = False
             preflist = self.client.server.supported_features.copy()
