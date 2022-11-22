@@ -110,8 +110,6 @@ class ClientManager:
 
             # movement system stuff
             self.last_move_time = 0
-            # If true, /getarea is called automatically when moving into a new area
-            self.autogetarea = True
 
             # client status stuff
             self._showname = ""
@@ -800,8 +798,6 @@ class ClientManager:
                 if len(self.area.desc) > len(desc):
                     desc += "... Use /desc to read the rest."
                 msg += f"\nDescription: {desc}"
-            if self.autogetarea:
-                self.send_area_info(self.area.id)
             self.send_ooc(msg)
 
             # We failed to enter the same area as whoever we've been following, break the follow
@@ -1138,14 +1134,28 @@ class ClientManager:
                 msg += f'\n{self.get_area_info(area.id, highlight_self=True)}'
                 self.send_ooc(msg)
 
-        def get_area_info(self, area_id):
+        def get_area_info(self, area_id, mods, afk_check):
             """
             Get information about a specific area.
             :param area_id: area ID
+            :param mods: limit player list to mods
+            :param afk_check: Limit player list to afks
             :returns: information as a string
             """
             info = ""
-            area = self.area.area_manager.get_area_by_id(area_id)
+            try:
+                area = self.area.area_manager.get_area_by_id(area_id)
+            except AreaError:
+                raise
+
+            if afk_check:
+                player_list = area.afkers
+            else:
+                player_list = area.clients
+
+            if not self.is_mod and self not in area.owners:
+                # We exclude hidden players here because we don't want them to count for the user count
+                player_list = [c for c in player_list if not c.hidden]
             status = ""
             if self.area.area_manager.arup_enabled:
                 status = f" [{area.status}]"
@@ -1157,47 +1167,14 @@ class ClientManager:
             passworded = "🔑" if area.password != "" else ""
             muted = "🔇" if area.muted else ""
             dark = "🌑" if area.dark else ""
-
-            if not self.is_mod and self not in area.owners:
-                if area.hide_clients or area.area_manager.hide_clients:
-                    users = ''
-                else:
-                    # We exclude hidden players here because we don't want them to count for the user count
-                    player_list = [c for c in area.clients if not c.hidden]
-                    users = f' (users: {len(player_list)}) '
-                if area.hidden:
-                    return ""
-                if area.dark:
-                    return f"=== [{area.id}] {area.name} {status}{locked}{passworded}{muted}{dark}==="
-            else:
-                users = f' (users: {len(area.clients)} '
-
-            info += f"=== [{area.id}] {area.name}{users}{status}{hidden}{locked}{passworded}{muted}{dark}==="
-            return info
-
-        def get_area_clients(self, area_id, mods, afk_check):
-            info = ""
-            area = self.area.area_manager.get_area_by_id(area_id)
-            if afk_check:
-                player_list = area.afkers
-            else:
-                player_list = area.clients
-
-            if not self.is_mod and self not in area.owners:
-                if not area.can_getarea:
-                    raise ClientError("Unknown clients - can't /getarea.")
-                if area.dark:
-                    raise ClientError("Unknown clients - this area is dark.")
-
-                # We exclude hidden players here because we don't want them to count for the user count
-                player_list = [c for c in player_list if not c.hidden]
+            info += f"=== [{area.id}] {area.name} (users: {len(player_list)}) {status}{hidden}{locked}{passworded}{muted}{dark}==="
 
             sorted_clients = []
             for client in player_list:
                 if (not mods) or client.is_mod:
                     sorted_clients.append(client)
             if not sorted_clients:
-                raise ClientError("No clients found.")
+                return ""
             # Sort the client list alphabetically based on the showname/charfolder name
             sorted_clients = sorted(sorted_clients, key=lambda x: x.showname)
             # Afterwards, sort the client list based on their unique role or status
@@ -1247,76 +1224,56 @@ class ClientManager:
                     info += f": {c.name}"
             return info
 
-        def send_areas_info(self, mods=False, afk_check=False):
-            """
-            Send information over OOC about all areas of the client's hub.
-            :param area_id: area ID
-            :param mods: if true, limit player list to mods
-            :param afk_check: if true, limit player list to afks
-            """
-            if (
-                not self.is_mod
-                and self not in self.area.area_manager.owners
-                and self.char_id != -1
-            ):
-                if self.blinded:
-                    raise ClientError("You are blinded!")
-                if not self.area.area_manager.can_getareas:
-                    raise ClientError(
-                        "You cannot see players in all areas in this hub!")
-
-            info = ""
-            cnt = 0
-            for i in range(len(self.area.area_manager.areas)):
-                area = self.area.area_manager.areas[i]
-                if afk_check:
-                    client_list = area.afkers
-                else:
-                    client_list = area.clients
-                if not self.is_mod and self not in area.owners:
-                    # We exclude hidden players here because we don't want them to count for the user count
-                    client_list = [c for c in client_list if not c.hidden]
-
-                area_info = self.get_area_info(i)
-                if area_info == "":
-                    continue
-
-                try:
-                    area_info += self.get_area_clients(i, mods, afk_check)
-                except ClientError:
-                    area_info = ""
-                if area_info == "":
-                    continue
-
-                if (
-                    len(client_list) > 0
-                    or len(area.owners) > 0
-                ):
-                    cnt += len(client_list)
-                    info += f"\r\n{area_info}"
-            if afk_check:
-                info = f"Current AFK-ers: {cnt}{info}"
-            else:
-                info = f"Current online: {cnt}{info}"
-            self.send_ooc(info)
-
-        def send_area_info(self, area_id, mods=False, afk_check=False):
+        def send_area_info(self, area_id, mods, afk_check=False):
             """
             Send information over OOC about a specific area.
             :param area_id: area ID
-            :param mods: if true, limit player list to mods
-            :param afk_check: if true, limit player list to afks
+            :param mods: limit player list to mods
+            :param afk_check: Limit player list to afks
             """
+            # if area_id is -1 then return all areas. If mods is True then return only mods
             info = ""
-            if not self.is_mod and self not in self.area.owners:
-                if self.blinded:
-                    raise ClientError("You are blinded!")
-            area_info = self.get_area_info(area_id)
-            try:
-                area_info += self.get_area_clients(area_id, mods, afk_check)
-            except ClientError as ex:
-                area_info += f'\n{ex}'
-            info += area_info
+            if area_id == -1:
+                # all areas info
+                cnt = 0
+                for i in range(len(self.area.area_manager.areas)):
+                    area = self.area.area_manager.areas[i]
+                    if afk_check:
+                        client_list = area.afkers
+                    else:
+                        client_list = area.clients
+                    if not self.is_mod and self not in area.owners:
+                        # We exclude hidden players here because we don't want them to count for the user count
+                        client_list = [c for c in client_list if not c.hidden]
+                    area_info = self.get_area_info(i, mods, afk_check)
+                    if (
+                        len(client_list) > 0
+                        or len(area.owners) > 0
+                    ) and area_info != "":
+                        cnt += len(client_list)
+                        info += f"\r\n{area_info}"
+                if afk_check:
+                    info = f"Current AFK-ers: {cnt}{info}"
+                else:
+                    info = f"Current online: {cnt}{info}"
+            else:
+                try:
+                    area = self.area.area_manager.areas[area_id]
+                    if afk_check:
+                        client_list = area.afkers
+                    else:
+                        client_list = area.clients
+                    if not self.is_mod and self not in area.owners:
+                        # We exclude hidden players here because we don't want them to count for the user count
+                        client_list = [c for c in client_list if not c.hidden]
+                    area_info = self.get_area_info(area_id, mods, afk_check)
+                    area_client_cnt = len(client_list)
+                    if afk_check:
+                        info = f"People AFK-ing in this area: {area_client_cnt}"
+                    info += area_info
+
+                except AreaError:
+                    raise
             self.send_ooc(info)
 
         def send_hub_list(self):

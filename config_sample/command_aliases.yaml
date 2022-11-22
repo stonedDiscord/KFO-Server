@@ -100,4 +100,3 @@ swap_testimony: testimony_swap
 swaptestimony: testimony_swap
 unlistenpos: unlisten_pos
 unmuteooc: ooc_unmute
-aga: autogetarea
