@@ -244,14 +244,14 @@ class ClientManager:
             """Send the message of the day to the client."""
             motd = self.server.config["motd"]
             if motd != "":
-                self.send_ooc(f"📟MOTD📟\r\n{motd}\r\n")
+                self.send_ooc(f"=== MOTD ===\r\n{motd}\r\n=============")
 
         def send_hub_info(self):
             """Send the hub info to the client."""
             info = self.area.area_manager.info
             if info != "":
                 self.send_ooc(
-                    f"🌍HUB [{self.area.area_manager.id}] {self.area.area_manager.name} INFO🌍\r\n{info}\r\n"
+                    f"=== HUB [{self.area.area_manager.id}] {self.area.area_manager.name} INFO ===\r\n{info}\r\n============="
                 )
 
         def send_player_count(self):
@@ -261,7 +261,7 @@ class ClientManager:
             """
             players = self.server.player_count
             limit = self.server.config["playerlimit"]
-            self.send_ooc(f"👥{players}/{limit} players online.")
+            self.send_ooc(f"{players}/{limit} players online.")
 
         def is_valid_name(self, name):
             """
@@ -686,11 +686,11 @@ class ClientManager:
             if len(self.server.hub_manager.hubs) > 1:
                 if not self.area.area_manager.arup_enabled:
                     area_list = [
-                        f"🌍[{self.area.area_manager.id}] {self.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
+                        f"[HUB: [{self.area.area_manager.id}] {self.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
                     ]
                 else:
                     area_list = [
-                        f"🌍[{self.area.area_manager.id}] {self.area.area_manager.name}"
+                        f"[HUB: [{self.area.area_manager.id}] {self.area.area_manager.name}"
                     ]
             if len(areas) > 0:
                 # This is where we can handle all the 'rendering', such as extra info etc.
@@ -764,7 +764,7 @@ class ClientManager:
                     c.send_command(
                         "FA",
                         *[
-                            "🌐 Hubs 🌐\n Double-Click me to see Areas\n  _______",
+                            "{ Hubs }\n Double-Click me to see Areas\n  _______",
                             *[
                                 f"[{hub.id}] {hub.name} (users: {hub.count})"
                                 for hub in self.server.hub_manager.hubs
@@ -795,12 +795,12 @@ class ClientManager:
             # Update our judge buttons
             self.area.update_judge_buttons(self)
             self.refresh_music()
-            msg = f"🚶Changed to area: {self.get_area_info(self.area.id)}"
+            msg = f"Changed to area: {self.get_area_info(self.area.id)}"
             if self.area.desc != "" and not self.blinded:
                 desc = self.area.desc[:128]
                 if len(self.area.desc) > len(desc):
                     desc += "... Use /desc to read the rest."
-                msg += f"\n📃Description: {desc}"
+                msg += f"\nDescription: {desc}"
             if self.autogetarea and not self.blinded:
                 try:
                     area_clients = self.get_area_clients(self.area.id)
@@ -1140,7 +1140,7 @@ class ClientManager:
 
         def send_area_list(self, full=False):
             """Send a list of areas over OOC."""
-            msg = "🗺️ Areas 🗺️"
+            msg = "=== Areas ==="
             area_list = self.get_area_list(full, full)
             for _, area in enumerate(area_list):
                 if area.hidden:

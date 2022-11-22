@@ -666,7 +666,7 @@ def ooc_cmd_desc(client, arg):
         desc = client.area.desc
         if client.area.dark:
             desc = client.area.desc_dark
-        client.send_ooc(f"📃Description: {desc}")
+        client.send_ooc(f"Description: {desc}")
         database.log_area("desc.request", client, client.area)
     else:
         if client.area.cannot_ic_interact(client):
@@ -687,7 +687,7 @@ def ooc_cmd_desc(client, arg):
         if len(arg) > len(desc):
             desc += "... Use /desc to read the rest."
         client.area.broadcast_ooc(
-            f"📃{client.showname} changed the area description to: {desc}."
+            f"{client.showname} changed the area description to: {desc}."
         )
         database.log_area("desc.change", client, client.area, message=arg)
 
