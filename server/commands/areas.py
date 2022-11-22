@@ -187,7 +187,7 @@ def ooc_cmd_getareas(client, arg):
     Show information about all areas.
     Usage: /getareas
     """
-    client.send_areas_clients()
+    client.send_areas_info()
 
 
 def ooc_cmd_getafk(client, arg):
@@ -523,14 +523,14 @@ def ooc_cmd_knock(client, arg):
         area.send_command("RT", "knock")
         if area == client.area:
             area.broadcast_ooc(
-                f"💢 [{client.id}] {client.showname} knocks for attention. 💢"
+                f"[{client.id}] {client.showname} knocks for attention."
             )
         else:
             client.area.broadcast_ooc(
                 f"[{client.id}] {client.showname} knocks on [{area.id}] {area.name}."
             )
             area.broadcast_ooc(
-                f"💢 Someone is knocking from [{client.area.id}] {client.area.name} 💢"
+                f"!! Someone is knocking from [{client.area.id}] {client.area.name} !!"
             )
     except ValueError:
         raise ArgumentError(
@@ -666,7 +666,7 @@ def ooc_cmd_desc(client, arg):
         desc = client.area.desc
         if client.area.dark:
             desc = client.area.desc_dark
-        client.send_ooc(f"📃Description: {desc}")
+        client.send_ooc(f"Description: {desc}")
         database.log_area("desc.request", client, client.area)
     else:
         if client.area.cannot_ic_interact(client):
@@ -687,7 +687,7 @@ def ooc_cmd_desc(client, arg):
         if len(arg) > len(desc):
             desc += "... Use /desc to read the rest."
         client.area.broadcast_ooc(
-            f"📃{client.showname} changed the area description to: {desc}."
+            f"{client.showname} changed the area description to: {desc}."
         )
         database.log_area("desc.change", client, client.area, message=arg)
 

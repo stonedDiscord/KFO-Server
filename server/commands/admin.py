@@ -355,7 +355,7 @@ def ooc_cmd_mods(client, arg):
     Show a list of moderators online.
     Usage: /mods
     """
-    client.send_areas_clients(mods=True)
+    client.send_areas_info(mods=True)
 
 
 def ooc_cmd_unmod(client, arg):
