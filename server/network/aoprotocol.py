@@ -636,9 +636,9 @@ class AOProtocol(asyncio.Protocol):
 
         if not self.client.is_mod and not (self.client in self.client.area.owners):
             if not self.client.area.blankposting_allowed:
-                # Regex is slow as hell, need to change this to be more performant
+                chars_to_remove = ['{', '}', '[', ']', '\\', '`', '|', '(', ')', '~', ' ']
                 if text.strip() == "" or (
-                    len(re.sub(r"[{}\\`|(~~)]", "", text).replace(" ", "")) < 3
+                    len(text.translate({ord(x): '' for x in chars_to_remove})) < 3
                     and not text.startswith("<")
                     and not text.startswith(">")
                 ):
