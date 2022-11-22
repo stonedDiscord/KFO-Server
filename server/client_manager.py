@@ -1280,7 +1280,8 @@ class ClientManager:
                     raise ClientError(
                         "You cannot see players in all areas in this hub!")
 
-            info = "🗺️ Clients in Areas 🗺️\n"
+            info = f"Current online: 999\n"
+            info += "== Area List ==\n"
             cnt = 0
             for i in range(len(self.area.area_manager.areas)):
                 area = self.area.area_manager.areas[i]
@@ -1292,7 +1293,7 @@ class ClientManager:
                     # We exclude hidden players here because we don't want them to count for the user count
                     client_list = [c for c in client_list if not c.hidden]
 
-                area_info = f'{self.get_area_info(i)}:'
+                area_info = f'=== {self.get_area_info(i)}==='
                 if area_info == "":
                     continue
 
@@ -1311,8 +1312,6 @@ class ClientManager:
                     info += f"{area_info}\n"
             if afk_check:
                 info += f"Current AFK-ers: {cnt}"
-            else:
-                info += f"Current online: {cnt}"
             self.send_ooc(info)
 
         def send_area_info(self, area_id, mods=False, afk_check=False):
@@ -1322,11 +1321,11 @@ class ClientManager:
             :param mods: if true, limit player list to mods
             :param afk_check: if true, limit player list to afks
             """
-            info = ""
+            info = "People in this area: 999\n"
             if not self.is_mod and self not in self.area.owners:
                 if self.blinded:
                     raise ClientError("You are blinded!")
-            area_info = f'📍 Clients in {self.get_area_info(area_id)} 📍'
+            area_info = f'=== {self.get_area_info(area_id)}==='
             try:
                 area_info += self.get_area_clients(area_id, mods, afk_check)
             except ClientError as ex:
@@ -1335,7 +1334,7 @@ class ClientManager:
             self.send_ooc(info)
 
         def send_hub_list(self):
-            msg = "🌐 Hubs 🌐"
+            msg = "{ Hubs }"
             for hub in self.server.hub_manager.hubs:
                 owner = "FREE"
                 if len(hub.owners) > 0:
