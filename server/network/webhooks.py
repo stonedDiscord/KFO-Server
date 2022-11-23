@@ -79,14 +79,8 @@ class Webhooks:
 
         description = f"[{current_time} UTC] {char} ({ipid}) in hub [{area.area_manager.id}] {area.area_manager.name} [{area.id}] {area.name} {'without reason (using <2.6?)' if reason is None else f'with reason: {reason}'}"
 
-        self.send_webhook(
-            username=username,
-            avatar_url=avatar_url,
-            message=message,
-            embed=True,
-            title="Modcall",
-            description=description,
-        )
+        self.send_webhook(username=username,
+                          avatar_url=avatar_url, message=description)
 
     def kick(self, ipid, reason="", client=None, char=None):
         is_enabled = self.server.config["kick_webhook"]["enabled"]
