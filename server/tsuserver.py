@@ -302,7 +302,7 @@ class TsuServer3:
             self.config["secondfactor"] = False
 
     def load_command_aliases(self):
-        """Load a list of banned words to scrub from chats."""
+        """Load a list of alternative command names."""
         try:
             with open(
                 "config/command_aliases.yaml", "r", encoding="utf-8"
