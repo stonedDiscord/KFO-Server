@@ -1,5 +1,3 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I2I51SHXD)
-
 # KFO-Server
 
 KFO-Server is the official Python-based server for Attorney Online, forked from tsuserver3.
