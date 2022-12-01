@@ -4,7 +4,7 @@ KFO-Server is the official Python-based server for Attorney Online, forked from 
 
 ## Commands
 
-Documentation: ["Commands"](https://github.com/Crystalwarrior/KFO-Server/blob/master/docs/commands.md). You may also use the /help documentation on the server.
+Documentation: ["Commands"](https://github.com/stonedDiscord/KFO-Server/blob/master/docs/commands.md). You may also use the /help documentation on the server.
 
 ## Easy setup instructions
 
@@ -18,7 +18,7 @@ The server will not work out of the box. **You must follow these instructions.**
   
 ### Download KFO-Server
 
-We recommend [Git](https://git-scm.com/downloads/guis) - it makes it very easy to update tsuserver. But we are power users and therefore inherently biased. You can instead download the latest zip of KFO-Server with [this link](https://github.com/Crystalwarrior/KFO-Server/archive/refs/heads/master.zip). Extract it and put it wherever you want.
+We recommend [Git](https://git-scm.com/downloads/guis) - it makes it very easy to update tsuserver. But we are power users and therefore inherently biased. You can instead download the latest zip of KFO-Server with [this link](https://github.com/stonedDiscord/KFO-Server/archive/refs/heads/master.zip). Extract it and put it wherever you want.
 
 ### Install dependencies
 
