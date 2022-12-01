@@ -38,7 +38,7 @@ We recommend [Git](https://git-scm.com/downloads/guis) - it makes it very easy t
 ### Configure tsuserver
 
 * **Rename `config_sample` to `config`**.
-* Edit the values in the `.yaml` files to your liking. If you downloaded tsuserver from a zip and try to edit it from Notepad, the line breaks will be missing. That's because Notepad is stupid. Use [Notepad++](https://notepad-plus-plus.org/) instead like the pro you are.
+* Edit the values in the `.yaml` files to your liking. If you downloaded tsuserver from a zip and try to edit it from Notepad, the line breaks will be missing. That's because Notepad is stupid. Use [VS Code](https://code.visualstudio.com/) instead like the pro you are.
 * Be sure to check your YAML file for syntax errors. Use this website: http://www.yamllint.com/
   - *Use spaces only; do not use tabs.* That's another reason we recommend anything that isn't Notepad.
 * You don't need to copy characters into the `characters` folder *unless* you specifically chose to disable iniswapping in an area (in `areas.yaml`). In this case, all tsuserver needs to know is the `char.ini` of each character. It doesn't need sprites.
