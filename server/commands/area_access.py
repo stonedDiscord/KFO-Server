@@ -545,7 +545,7 @@ def ooc_cmd_link_unlock(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_link_hide(client, arg):
     """
     Hide the path leading to target area(s).
@@ -575,7 +575,7 @@ def ooc_cmd_link_hide(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_link_unhide(client, arg):
     """
     Unhide the path leading to target area(s).
