@@ -1163,25 +1163,7 @@ class ClientManager:
             owner = ""
             if len(area._owners) > 0:
                 owner = f"[CM(s): {area.get_owners()}]"
-            hidden = "📦" if area.hidden else ""
-            locked = "🔒" if area.locked else ""
-            pathlocked = (
-                "🚧"
-                if str(area.id) in self.area.links
-                and self.area.links[str(area.id)]["locked"]
-                else ""
-            )
-            passworded = "🔑" if area.password != "" else ""
-            muted = "🔇" if area.muted else ""
-            dark = "🌑" if area.dark else ""
 
-            if highlight_self:
-                if self.area == area:
-                    info += " ◽ "
-                else:
-                    info += " ◾ "
-            if not self.can_access_area(area):
-                info += "❌"
             if not self.is_mod and self not in area.owners:
                 if area.hide_clients or area.area_manager.hide_clients or area.dark:
                     users = ''
@@ -1194,7 +1176,7 @@ class ClientManager:
             else:
                 users = f' (users: {len(area.clients)}) '
 
-            info += f"[{area.id}] {area.name}{users}{status}{owner}{hidden}{locked}{pathlocked}{passworded}{muted}{dark}"
+            info += f"[{area.id}] {area.name}{users}{status}\n{owner}"
             return info
 
         def get_area_clients(self, area_id, mods=False, afk_check=False):
