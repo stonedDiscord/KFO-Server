@@ -705,8 +705,8 @@ class AOProtocol(asyncio.Protocol):
                         "You can only blankpost in this area!"
                     )
                     return
-
-        if text.replace(" ", "").startswith("((") or text.replace(" ", "").startswith("//"):
+        stripped = text.replace(" ", "")
+        if stripped.startswith("((") or stripped.startswith("//") or stripped.endswith("))") or stripped.endswith("//"):
             self.client.send_ooc(
                 "Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /h to talk across the hub, or /g to talk across the entire server."
             )
