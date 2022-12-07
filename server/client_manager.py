@@ -1650,12 +1650,12 @@ class ClientManager:
             client.area.area_manager.owners.remove(client)
         for hub in self.server.hub_manager.hubs:
             for a in hub.areas:
-                if client in a._owners:
-                    a.remove_owner(client, dc=True)
                 # This discards the client's ID from any of the area invite lists
                 # as that ID will no longer refer to this specific player.
                 if client.id in a.invite_list:
                     a.invite_list.discard(client.id)
+                if client in a._owners:
+                    a.remove_owner(client, dc=True)
         heappush(self.cur_id, client.id)
         temp_ipid = client.ipid
         for c in self.server.client_manager.clients:
