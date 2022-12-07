@@ -240,15 +240,15 @@ class TsuServer3:
 
         """
         if client.area:
-            area = client.area
             if (
-                not area.dark
-                and not area.force_sneak
+                not client.area.dark
+                and not client.area.force_sneak
                 and not client.sneaking
                 and not client.hidden
             ):
-                area.broadcast_ooc(
+                client.area.broadcast_ooc(
                     f"[{client.id}] {client.showname} has disconnected.")
+            area = client.area
             area.remove_client(client)
         self.client_manager.remove_client(client)
 
