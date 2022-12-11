@@ -1778,7 +1778,7 @@ class AOProtocol(asyncio.Protocol):
         evi = (args[1], args[2], args[3], "all")
 
         self.client.area.evi_list.edit_evidence(self.client, int(args[0]), evi)
-        database.log_area("evidence.edit", self.client, self.client.area, message='#'.join(args))
+        database.log_area("evidence.edit", self.client, self.client.area, message=args[0])
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_zz(self, args):
