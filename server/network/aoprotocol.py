@@ -302,7 +302,7 @@ class AOProtocol(asyncio.Protocol):
         # For some reason, if DRO Client doesn't receive this back it just never clears the IC input box even if we send back the correct MS# packet.
         #    self.client.send_command("client_version", 1, 1, 0)
         # Send Asset packet if asset_url is defined
-        if self.server.config["asset_url"] != "":
+        if self.server.config["asset_url"] != "" and self.server.config["asset_url"] is not None:
             self.client.send_command("ASS", self.server.config["asset_url"])
 
         if self.server.config["secondfactor"] is True:
