@@ -217,7 +217,7 @@ class TsuServer3:
             asn = "Loopback"
 
         for line, rangeBan in enumerate(self.ipRange_bans):
-            if rangeBan != "" and peername.startswith(rangeBan) or asn == rangeBan:
+            if rangeBan != "" and ((peername.startswith(rangeBan) and rangeBan.endswith('.')) or asn == rangeBan):
                 msg = "BD#"
                 msg += "Abuse\r\n"
                 msg += f"ID: {line}\r\n"
@@ -240,15 +240,15 @@ class TsuServer3:
 
         """
         if client.area:
-            area = client.area
             if (
-                not area.dark
-                and not area.force_sneak
+                not client.area.dark
+                and not client.area.force_sneak
                 and not client.sneaking
                 and not client.hidden
             ):
-                area.broadcast_ooc(
+                client.area.broadcast_ooc(
                     f"[{client.id}] {client.showname} has disconnected.")
+            area = client.area
             area.remove_client(client)
         self.client_manager.remove_client(client)
 
@@ -298,9 +298,13 @@ class TsuServer3:
             self.config["block_repeat"] = True
         if "block_relative" not in self.config:
             self.config["block_relative"] = False
+        if "global_chat" not in self.config:
+            self.config["global_chat"] = True
+        if "secondfactor" not in self.config:
+            self.config["secondfactor"] = False
 
     def load_command_aliases(self):
-        """Load a list of banned words to scrub from chats."""
+        """Load a list of alternative command names."""
         try:
             with open(
                 "config/command_aliases.yaml", "r", encoding="utf-8"
@@ -485,7 +489,8 @@ class TsuServer3:
 
     def send_discord_chat(self, name, message, hub_id=0, area_id=0):
         area = self.hub_manager.get_hub_by_id(hub_id).get_area_by_id(area_id)
-        cid = area.area_manager.get_char_id_by_name(self.config["bridgebot"]["character"])
+        cid = area.area_manager.get_char_id_by_name(
+            self.config["bridgebot"]["character"])
         message = dezalgo(message)
         message = remove_URL(message)
         message = (
@@ -504,37 +509,11 @@ class TsuServer3:
         if len(name) > 14:
             name = name[:14].rstrip() + "."
         area.send_ic(
-            None,
-            "1",
-            0,
-            self.config["bridgebot"]["character"],
-            self.config["bridgebot"]["emote"],
-            message,
-            self.config["bridgebot"]["pos"],
-            "",
-            0,
-            cid,
-            0,
-            0,
-            [0],
-            0,
-            0,
-            0,
-            name,
-            -1,
-            "",
-            "",
-            0,
-            0,
-            0,
-            0,
-            "0",
-            0,
-            "",
-            "",
-            "",
-            0,
-            "",
+            folder=self.config["bridgebot"]["character"],
+            anim=self.config["bridgebot"]["emote"],
+            showname=name,
+            msg=message,
+            pos=self.config["bridgebot"]["pos"],
         )
 
     def refresh(self):

@@ -93,7 +93,9 @@ def remove_URL(sample):
 
 def contains_URL(sample):
     """Determine if string contains a URL in sample string."""
-    return re.match(r"http\S+", sample) is not None
+    if sample.count("http") > 0 and sample.count("://") > 0:
+        return True
+    return False
 
 
 def encode_ao_packet(params):

@@ -262,7 +262,7 @@ def ooc_cmd_unlock(client, arg):
         ooc_cmd_link_unlock(client, links)
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_link(client, arg):
     """
     Set up a two-way link from your current area with targeted area(s).
@@ -302,7 +302,7 @@ def ooc_cmd_link(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_unlink(client, arg):
     """
     Remove a two-way link from your current area with targeted area(s).
@@ -383,7 +383,7 @@ def ooc_cmd_links(client, arg):
     client.send_ooc(f"Current area links are: {links}")
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_onelink(client, arg):
     """
     Set up a one-way link from your current area with targeted area(s).
@@ -420,7 +420,7 @@ def ooc_cmd_onelink(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_oneunlink(client, arg):
     """
     Remove a one-way link from your current area with targeted area(s).
@@ -545,7 +545,7 @@ def ooc_cmd_link_unlock(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_link_hide(client, arg):
     """
     Hide the path leading to target area(s).
@@ -575,7 +575,7 @@ def ooc_cmd_link_hide(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_link_unhide(client, arg):
     """
     Unhide the path leading to target area(s).
@@ -605,7 +605,7 @@ def ooc_cmd_link_unhide(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_link_pos(client, arg):
     """
     Set the link's targeted pos when using it. Leave blank to reset.
@@ -633,7 +633,7 @@ def ooc_cmd_link_pos(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_link_peekable(client, arg):
     """
     Make the path(s) leading to target area(s) /peek-able.
@@ -664,7 +664,7 @@ def ooc_cmd_link_peekable(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_link_unpeekable(client, arg):
     """
     Make the path(s) leading to target area(s) no longer /peek-able.
@@ -696,7 +696,7 @@ def ooc_cmd_link_unpeekable(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_link_evidence(client, arg):
     """
     Make specific link only accessible from evidence ID(s).
@@ -740,7 +740,7 @@ def ooc_cmd_link_evidence(client, arg):
             )
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_unlink_evidence(client, arg):
     """
     Unlink evidence from links.
