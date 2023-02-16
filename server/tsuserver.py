@@ -298,6 +298,8 @@ class TsuServer3:
             self.config["block_repeat"] = True
         if "block_relative" not in self.config:
             self.config["block_relative"] = False
+        if "global_chat" not in self.config:
+            self.config["global_chat"] = True
         if "secondfactor" not in self.config:
             self.config["secondfactor"] = False
 
@@ -509,6 +511,7 @@ class TsuServer3:
         area.send_ic(
             folder=self.config["bridgebot"]["character"],
             anim=self.config["bridgebot"]["emote"],
+            showname=name,
             msg=message,
             pos=self.config["bridgebot"]["pos"],
         )
