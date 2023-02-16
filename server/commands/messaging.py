@@ -42,7 +42,7 @@ def ooc_cmd_g(client, arg):
     client.server.broadcast_global(client, arg, client.is_mod)
     database.log_area("chat.global", client, client.area, message=arg)
 
-
+@mod_only()
 def ooc_cmd_h(client, arg):
     """
     Broadcast a hub-wide message.
@@ -179,7 +179,7 @@ def ooc_cmd_pm(client, arg):
     else:
         if c.is_mod:
             c.send_ooc(
-                "📨PM from {} (ID: {}, IPID: {}) in {} ({}): {}".format(
+                "PM from {} (ID: {}, IPID: {}) in {} ({}): {}".format(
                     client.name,
                     client.id,
                     client.ipid,
@@ -190,11 +190,11 @@ def ooc_cmd_pm(client, arg):
             )
         else:
             c.send_ooc(
-                "📨PM from {} (ID: {}) in {} ({}): {}".format(
+                "PM from {} (ID: {}) in {} ({}): {}".format(
                     client.name, client.id, client.area.name, client.showname, msg
                 )
             )
-        client.send_ooc("📤PM sent to {}. Message: {}".format(args[0], msg))
+        client.send_ooc("PM sent to {}. Message: {}".format(args[0], msg))
 
 
 def ooc_cmd_mutepm(client, arg):

@@ -62,7 +62,7 @@ def ooc_cmd_help(client, arg):
         If you don't understand a specific core feature, check the official
         repository for more information:
 
-        https://github.com/Crystalwarrior/KFO-Server/blob/master/README.md 
+        https://github.com/stonedDiscord/KFO-Server/blob/master/README.md
 
         Available Categories:
         """
@@ -204,6 +204,9 @@ def kickban(client, arg, ban_hdid):
                 if ban_hdid:
                     database.ban(c.hdid, reason,
                                  ban_type="hdid", ban_id=ban_id)
+                    if c.userid:
+                        database.ban(c.userid, reason,
+                                     ban_type="hdid", ban_id=ban_id)
                     hdid = c.hdid
                 c.send_command("KB", reason)
                 c.disconnect()
@@ -350,6 +353,7 @@ def ooc_cmd_online(client, _):
     client.send_player_count()
 
 
+@mod_only()
 def ooc_cmd_mods(client, arg):
     """
     Show a list of moderators online.

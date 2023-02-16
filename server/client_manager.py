@@ -45,6 +45,7 @@ class ClientManager:
             self.is_checked = False
             self.transport = transport
             self.hdid = ""
+            self.userid = None
             self.id = user_id
             self.char_id = None
             self.area = server.hub_manager.default_hub().default_area()
@@ -111,7 +112,7 @@ class ClientManager:
             # movement system stuff
             self.last_move_time = 0
             # If true, /getarea is called automatically when moving into a new area
-            self.autogetarea = True
+            self.autogetarea = False
 
             # client status stuff
             self._showname = ""
@@ -243,14 +244,14 @@ class ClientManager:
             """Send the message of the day to the client."""
             motd = self.server.config["motd"]
             if motd != "":
-                self.send_ooc(f"📟MOTD📟\r\n{motd}\r\n")
+                self.send_ooc(f"=== MOTD ===\r\n{motd}\r\n=============")
 
         def send_hub_info(self):
             """Send the hub info to the client."""
             info = self.area.area_manager.info
             if info != "":
                 self.send_ooc(
-                    f"🌍HUB [{self.area.area_manager.id}] {self.area.area_manager.name} INFO🌍\r\n{info}\r\n"
+                    f"=== HUB [{self.area.area_manager.id}] {self.area.area_manager.name} INFO ===\r\n{info}\r\n============="
                 )
 
         def send_player_count(self):
@@ -260,7 +261,7 @@ class ClientManager:
             """
             players = self.server.player_count
             limit = self.server.config["playerlimit"]
-            self.send_ooc(f"👥{players}/{limit} players online.")
+            self.send_ooc(f"{players}/{limit} players online.")
 
         def is_valid_name(self, name):
             """
@@ -685,11 +686,11 @@ class ClientManager:
             if len(self.server.hub_manager.hubs) > 1:
                 if not self.area.area_manager.arup_enabled:
                     area_list = [
-                        f"🌍[{self.area.area_manager.id}] {self.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
+                        f"[HUB: [{self.area.area_manager.id}] {self.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
                     ]
                 else:
                     area_list = [
-                        f"🌍[{self.area.area_manager.id}] {self.area.area_manager.name}"
+                        f"[HUB: [{self.area.area_manager.id}] {self.area.area_manager.name}"
                     ]
             if len(areas) > 0:
                 # This is where we can handle all the 'rendering', such as extra info etc.
@@ -763,7 +764,7 @@ class ClientManager:
                     c.send_command(
                         "FA",
                         *[
-                            "🌐 Hubs 🌐\n Double-Click me to see Areas\n  _______",
+                            "{ Hubs }\n Double-Click me to see Areas\n  _______",
                             *[
                                 f"[{hub.id}] {hub.name} (users: {hub.count})"
                                 for hub in self.server.hub_manager.hubs
@@ -794,12 +795,12 @@ class ClientManager:
             # Update our judge buttons
             self.area.update_judge_buttons(self)
             self.refresh_music()
-            msg = f"🚶Changed to area: {self.get_area_info(self.area.id)}"
+            msg = f"Changed to area: {self.get_area_info(self.area.id)}"
             if self.area.desc != "" and not self.blinded:
                 desc = self.area.desc[:128]
                 if len(self.area.desc) > len(desc):
                     desc += "... Use /desc to read the rest."
-                msg += f"\n📃Description: {desc}"
+                msg += f"\nDescription: {desc}"
             if self.autogetarea and not self.blinded:
                 try:
                     area_clients = self.get_area_clients(self.area.id)
@@ -1139,7 +1140,7 @@ class ClientManager:
 
         def send_area_list(self, full=False):
             """Send a list of areas over OOC."""
-            msg = "🗺️ Areas 🗺️"
+            msg = "=== Areas ==="
             area_list = self.get_area_list(full, full)
             for _, area in enumerate(area_list):
                 if area.hidden:
@@ -1162,25 +1163,7 @@ class ClientManager:
             owner = ""
             if len(area._owners) > 0:
                 owner = f"[CM(s): {area.get_owners()}]"
-            hidden = "📦" if area.hidden else ""
-            locked = "🔒" if area.locked else ""
-            pathlocked = (
-                "🚧"
-                if str(area.id) in self.area.links
-                and self.area.links[str(area.id)]["locked"]
-                else ""
-            )
-            passworded = "🔑" if area.password != "" else ""
-            muted = "🔇" if area.muted else ""
-            dark = "🌑" if area.dark else ""
 
-            if highlight_self:
-                if self.area == area:
-                    info += " ◽ "
-                else:
-                    info += " ◾ "
-            if not self.can_access_area(area):
-                info += "❌"
             if not self.is_mod and self not in area.owners:
                 if area.hide_clients or area.area_manager.hide_clients or area.dark:
                     users = ''
@@ -1193,7 +1176,7 @@ class ClientManager:
             else:
                 users = f' (users: {len(area.clients)}) '
 
-            info += f"[{area.id}] {area.name}{users}{status}{owner}{hidden}{locked}{pathlocked}{passworded}{muted}{dark}"
+            info += f"[{area.id}] {area.name}{users}{status}\n{owner}"
             return info
 
         def get_area_clients(self, area_id, mods=False, afk_check=False):
@@ -1240,34 +1223,25 @@ class ClientManager:
             )
             for c in sorted_clients:
                 info += "\r\n"
-                if c == self:
-                    info += "  ◽ "
-                else:
-                    info += "  ◾ "
-                if c in area.afkers:
-                    info += "💤"
-                if c.hidden:
-                    name = ""
-                    if c.hidden_in is not None:
-                        name = f":{c.area.evi_list.evidences[c.hidden_in].name}"
-                    info += f"📦{name}"
-                if c.is_mod:
-                    info += "[M]"
+                if c.is_mod and self.is_mod:
+                    info += "[M] "
                 elif c in area.area_manager.owners:
-                    info += "[GM]"
+                    info += "[GM] "
                 elif c in area._owners:
-                    info += "[CM]"
-                info += f"[{c.id}] "
-                if c.showname != c.char_name:
-                    info += f'"{c.showname}" ({c.char_name})'
-                else:
-                    info += f"{c.showname}"
+                    info += "[CM] "
+                if c in area.afkers:
+                    info += "[AFK] "
+                if c.hidden:
+                    name = ''
+                    if c.hidden_in != None:
+                        name = f':{c.area.evi_list.evidences[c.hidden_in].name}'
+                    info += f'[HID{name}] '
+                info += f'[{c.id}] {c.char_name}'
+                info += f' ({c.showname})'
                 if c.pos != "":
                     info += f" <{c.pos}>"
                 if self.is_mod:
-                    info += f" ({c.ipid})"
-                if c.name != "" and (self.is_mod or self in area.owners):
-                    info += f": {c.name}"
+                    info += f" ({c.ipid}): {c.name}"
             return info
 
         def send_areas_clients(self, mods=False, afk_check=False):
@@ -1288,7 +1262,8 @@ class ClientManager:
                     raise ClientError(
                         "You cannot see players in all areas in this hub!")
 
-            info = "🗺️ Clients in Areas 🗺️\n"
+            info = f"Current online: 999\n"
+            info += "== Area List ==\n"
             cnt = 0
             for i in range(len(self.area.area_manager.areas)):
                 area = self.area.area_manager.areas[i]
@@ -1300,7 +1275,7 @@ class ClientManager:
                     # We exclude hidden players here because we don't want them to count for the user count
                     client_list = [c for c in client_list if not c.hidden]
 
-                area_info = f'{self.get_area_info(i)}:'
+                area_info = f'=== {self.get_area_info(i)}==='
                 if area_info == "":
                     continue
 
@@ -1319,8 +1294,6 @@ class ClientManager:
                     info += f"{area_info}\n"
             if afk_check:
                 info += f"Current AFK-ers: {cnt}"
-            else:
-                info += f"Current online: {cnt}"
             self.send_ooc(info)
 
         def send_area_info(self, area_id, mods=False, afk_check=False):
@@ -1330,11 +1303,11 @@ class ClientManager:
             :param mods: if true, limit player list to mods
             :param afk_check: if true, limit player list to afks
             """
-            info = ""
+            info = "People in this area: 999\n"
             if not self.is_mod and self not in self.area.owners:
                 if self.blinded:
                     raise ClientError("You are blinded!")
-            area_info = f'📍 Clients in {self.get_area_info(area_id)} 📍'
+            area_info = f'=== {self.get_area_info(area_id)}==='
             try:
                 area_info += self.get_area_clients(area_id, mods, afk_check)
             except ClientError as ex:
@@ -1343,7 +1316,7 @@ class ClientManager:
             self.send_ooc(info)
 
         def send_hub_list(self):
-            msg = "🌐 Hubs 🌐"
+            msg = "{ Hubs }"
             for hub in self.server.hub_manager.hubs:
                 owner = "FREE"
                 if len(hub.owners) > 0:
@@ -1677,12 +1650,12 @@ class ClientManager:
             client.area.area_manager.owners.remove(client)
         for hub in self.server.hub_manager.hubs:
             for a in hub.areas:
-                if client in a._owners:
-                    a.remove_owner(client, dc=True)
                 # This discards the client's ID from any of the area invite lists
                 # as that ID will no longer refer to this specific player.
                 if client.id in a.invite_list:
                     a.invite_list.discard(client.id)
+                if client in a._owners:
+                    a.remove_owner(client, dc=True)
         heappush(self.cur_id, client.id)
         temp_ipid = client.ipid
         for c in self.server.client_manager.clients:

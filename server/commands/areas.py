@@ -293,7 +293,7 @@ def ooc_cmd_uninvite(client, arg):
         client.send_ooc("No targets found.")
 
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_area_kick(client, arg):
     """
     Remove a user from the current area and move them to another area.
@@ -470,7 +470,7 @@ def ooc_cmd_pos_lock_clear(client, arg):
     client.area.pos_lock.clear()
     client.area.broadcast_ooc("Position lock cleared.")
 
-
+@mod_only()
 def ooc_cmd_knock(client, arg):
     """
     Knock on the target area ID to call on their attention to your area.
@@ -539,7 +539,7 @@ def ooc_cmd_knock(client, arg):
     except (AreaError, ClientError):
         raise
 
-
+@mod_only()
 def ooc_cmd_peek(client, arg):
     """
     Peek into an area to see if there's people in it.
@@ -628,7 +628,7 @@ def ooc_cmd_peek(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_max_players(client, arg):
     """
     Set a max amount of players for current area between -1 and 99.
@@ -666,7 +666,7 @@ def ooc_cmd_desc(client, arg):
         desc = client.area.desc
         if client.area.dark:
             desc = client.area.desc_dark
-        client.send_ooc(f"📃Description: {desc}")
+        client.send_ooc(f"Description: {desc}")
         database.log_area("desc.request", client, client.area)
     else:
         if client.area.cannot_ic_interact(client):
@@ -687,7 +687,7 @@ def ooc_cmd_desc(client, arg):
         if len(arg) > len(desc):
             desc += "... Use /desc to read the rest."
         client.area.broadcast_ooc(
-            f"📃{client.showname} changed the area description to: {desc}."
+            f"{client.showname} changed the area description to: {desc}."
         )
         database.log_area("desc.change", client, client.area, message=arg)
 

@@ -504,6 +504,7 @@ def ooc_cmd_player_unhide(client, arg):
         client.send_ooc("No targets found.")
 
 
+@mod_only(hub_owners=True)
 def ooc_cmd_hide(client, arg):
     """
     Try to hide in the targeted evidence name or ID.
@@ -524,6 +525,7 @@ def ooc_cmd_hide(client, arg):
         raise
 
 
+@mod_only(hub_owners=True)
 def ooc_cmd_unhide(client, arg):
     """
     Stop hiding.
@@ -591,12 +593,12 @@ def ooc_cmd_unsneak(client, arg):
                 f"Error encountered: {ex}. Use /unsneak [id]")
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def force_sneak(client, arg):
     arg.sneak(True)
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def force_unsneak(client, arg):
     arg.sneak(False)
 
