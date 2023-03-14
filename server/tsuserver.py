@@ -216,6 +216,16 @@ class TsuServer3:
         else:
             asn = "Loopback"
 
+        if (peername.len() > 15):
+            msg = "BD#"
+            msg += "Abuse\r\n"
+            msg += f"ID: 6\r\n"
+            msg += "Until: N/A"
+            msg += "#%"
+
+            transport.write(msg.encode("utf-8"))
+            raise ClientError
+
         for line, rangeBan in enumerate(self.ipRange_bans):
             if rangeBan != "" and ((peername.startswith(rangeBan) and rangeBan.endswith('.')) or asn == rangeBan):
                 msg = "BD#"
