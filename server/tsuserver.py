@@ -216,7 +216,7 @@ class TsuServer3:
         else:
             asn = "Loopback"
 
-        if (peername.len() > 15):
+        if (len(peername) > 15):
             msg = "BD#"
             msg += "Abuse\r\n"
             msg += f"ID: 6\r\n"
