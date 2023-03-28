@@ -1378,8 +1378,7 @@ class AOProtocol(asyncio.Protocol):
                 "Your message was not sent for safety reasons: you left space before that slash."
             )
             return
-        database.log_area("chat.ooc", self.client,
-                          self.client.area, message=args[1])
+
         if args[1].startswith("/"):
             spl = args[1][1:].split(" ", 1)
             cmd = spl[0].lower()
