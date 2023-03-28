@@ -1330,7 +1330,8 @@ class AOProtocol(asyncio.Protocol):
         ):
             self.client.send_ooc("That name is reserved!")
             return
-
+        database.log_area("chat.ooc", self.client,
+                          self.client.area, message=args[1])
         # Scrub text and OOC name for bad words, even if you're trying to pass bad words to a command as args.
         if (
             self.client.area.area_manager.censor_ooc
@@ -1419,8 +1420,6 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.send_owner_command(
             "CT", f"[{self.client.area.id}]{name}", args[1]
         )
-        database.log_area("chat.ooc", self.client,
-                          self.client.area, message=args[1])
 
     def net_cmd_mc(self, args):
         """Play music.
