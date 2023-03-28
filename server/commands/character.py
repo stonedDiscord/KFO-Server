@@ -49,6 +49,7 @@ __all__ = [
 ]
 
 
+@mod_only()
 def ooc_cmd_switch(client, arg):
     """
     Switch to another character. If moderator and the specified character is
