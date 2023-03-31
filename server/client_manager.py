@@ -68,9 +68,15 @@ class ClientManager:
             self.ipid = ipid
             self.version = ""
 
-            # Pairing stuff
+            # Pairing character ID
             self.charid_pair = -1
+            # Override if using the /pair command will lock "charid_pair" from being changed by MS packet
+            self.charid_pair_override = False
+            # Pairing order, either 0 (in front) or 1 (behind)
+            self.pair_order = 0
+            # Pairing offset
             self.offset_pair = 0
+
             self.last_sprite = ""
             self.flip = 0
             self.claimed_folder = ""
@@ -180,6 +186,9 @@ class ClientManager:
             # The currently playing audio for this client. Keeping track so we don't replay the same audio erroneously
             # (such as in the case of music_autoplay areas)
             self.playing_audio = ["", ""]
+            
+            # rainbowtext hell
+            self.rainbow = False
 
         def send_raw_message(self, msg):
             """
@@ -1674,6 +1683,19 @@ class ClientManager:
             parts = message.split()
             random.shuffle(parts)
             return " ".join(parts)
+
+        def rainbow_message(self, message):
+            """Turn the message into rainbows (base color assumed to be blue)"""
+            # red orange yellow green cyan blue magenta
+            color_array = ['~', '|', 'º', '`', '√', '', '№']
+            constructed_message = ''
+            # pseudo-randomize the rainbows based on msg length
+            index = len(message) % len(color_array)
+            for symbol in message:
+                symbol = f'{color_array[index]}{symbol}{color_array[index]}'
+                constructed_message += symbol
+                index = (index + 1) % len(color_array)
+            return constructed_message
 
     def __init__(self, server):
         self.clients = set()
