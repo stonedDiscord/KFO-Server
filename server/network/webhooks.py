@@ -68,7 +68,7 @@ class Webhooks:
         if not is_enabled:
             return
 
-        if mods == 0 and no_mods_ping:
+        if mods <= 1 and no_mods_ping:
             message = f"@{mod_role_id if mod_role_id is not None else 'here'} A user called for a moderator, but there are none online!"
         else:
             if mods == 1:
@@ -79,14 +79,8 @@ class Webhooks:
 
         description = f"[{current_time} UTC] {char} ({ipid}) in hub [{area.area_manager.id}] {area.area_manager.name} [{area.id}] {area.name} {'without reason (using <2.6?)' if reason is None else f'with reason: {reason}'}"
 
-        self.send_webhook(
-            username=username,
-            avatar_url=avatar_url,
-            message=message,
-            embed=True,
-            title="Modcall",
-            description=description,
-        )
+        self.send_webhook(username=username,
+                          avatar_url=avatar_url, message=description)
 
     def kick(self, ipid, reason="", client=None, char=None):
         is_enabled = self.server.config["kick_webhook"]["enabled"]

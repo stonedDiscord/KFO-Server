@@ -1,11 +1,10 @@
-
 # KFO-Server
 
 KFO-Server is the official Python-based server for Attorney Online, forked from tsuserver3.
 
 ## Commands
 
-Documentation: ["Commands"](https://github.com/Crystalwarrior/KFO-Server/blob/master/docs/commands.md). You may also use the /help documentation on the server.
+Documentation: ["Commands"](https://github.com/stonedDiscord/KFO-Server/blob/master/docs/commands.md). You may also use the /help documentation on the server.
 
 ## Easy setup instructions
 
@@ -19,7 +18,7 @@ The server will not work out of the box. **You must follow these instructions.**
   
 ### Download KFO-Server
 
-We recommend [Git](https://git-scm.com/downloads/guis) - it makes it very easy to update tsuserver. But we are power users and therefore inherently biased. You can instead download the latest zip of KFO-Server with [this link](https://github.com/Crystalwarrior/KFO-Server/archive/refs/heads/master.zip). Extract it and put it wherever you want.
+We recommend [Git](https://git-scm.com/downloads/guis) - it makes it very easy to update tsuserver. But we are power users and therefore inherently biased. You can instead download the latest zip of KFO-Server with [this link](https://github.com/stonedDiscord/KFO-Server/archive/refs/heads/master.zip). Extract it and put it wherever you want.
 
 ### Install dependencies
 
@@ -39,7 +38,7 @@ We recommend [Git](https://git-scm.com/downloads/guis) - it makes it very easy t
 ### Configure tsuserver
 
 * **Rename `config_sample` to `config`**.
-* Edit the values in the `.yaml` files to your liking. If you downloaded tsuserver from a zip and try to edit it from Notepad, the line breaks will be missing. That's because Notepad is stupid. Use [Notepad++](https://notepad-plus-plus.org/) instead like the pro you are.
+* Edit the values in the `.yaml` files to your liking. If you downloaded tsuserver from a zip and try to edit it from Notepad, the line breaks will be missing. That's because Notepad is stupid. Use [VS Code](https://code.visualstudio.com/) instead like the pro you are.
 * Be sure to check your YAML file for syntax errors. Use this website: http://www.yamllint.com/
   - *Use spaces only; do not use tabs.* That's another reason we recommend anything that isn't Notepad.
 * You don't need to copy characters into the `characters` folder *unless* you specifically chose to disable iniswapping in an area (in `areas.yaml`). In this case, all tsuserver needs to know is the `char.ini` of each character. It doesn't need sprites.
@@ -118,6 +117,6 @@ To keep the server running even after closing the terminal:
 
 ## License
 
-This server is licensed under the AGPLv3 license. In short, if you use a modified version of tsuserver3, you *must* distribute its source licensed under the AGPLv3 as well, and notify your users where the modified source may be found. The main difference between the AGPL and the GPL is that for the AGPL, network use counts as distribution. If you do not accept these terms, you should use [serverD](https://github.com/Attorney-Online-Engineering-Task-Force/serverD), which uses GPL rather than AGPL.
+This server is licensed under the AGPLv3 license. In short, if you use a modified version of tsuserver3, you *must* distribute its source licensed under the AGPLv3 as well, and notify your users where the modified source may be found. The main difference between the AGPL and the GPL is that for the AGPL, network use counts as distribution. If you do not accept these terms, you should use [serverD](https://github.com/stonedDiscord/serverD), which uses GPL rather than AGPL.
 
 See the [LICENSE](LICENSE.md) file for more information.

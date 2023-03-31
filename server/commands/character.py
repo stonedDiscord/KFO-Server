@@ -52,6 +52,7 @@ __all__ = [
 ]
 
 
+@mod_only()
 def ooc_cmd_switch(client, arg):
     """
     Switch to another character. If moderator and the specified character is
@@ -216,6 +217,7 @@ def ooc_cmd_forcepos(client, arg):
     )
 
 
+@mod_only()
 def ooc_cmd_charselect(client, arg):
     """
     Enter the character select screen, or force another user to select
@@ -578,6 +580,7 @@ def ooc_cmd_player_unhide(client, arg):
         client.send_ooc("No targets found.")
 
 
+@mod_only(hub_owners=True)
 def ooc_cmd_hide(client, arg):
     """
     Try to hide in the targeted evidence name or ID.
@@ -598,6 +601,7 @@ def ooc_cmd_hide(client, arg):
         raise
 
 
+@mod_only(hub_owners=True)
 def ooc_cmd_unhide(client, arg):
     """
     Stop hiding.
@@ -665,12 +669,12 @@ def ooc_cmd_unsneak(client, arg):
                 f"Error encountered: {ex}. Use /unsneak [id]")
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def force_sneak(client, arg):
     arg.sneak(True)
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def force_unsneak(client, arg):
     arg.sneak(False)
 

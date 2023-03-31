@@ -23,6 +23,8 @@ from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server import database
 import time
 import arrow
+from google.oauth2 import id_token
+from google.auth.transport import requests
 from enum import Enum
 import asyncio
 import re
@@ -190,9 +192,56 @@ class AOProtocol(asyncio.Protocol):
             return
         hdid = self.client.hdid = args[0]
         ipid = self.client.ipid
-
         database.add_hdid(ipid, hdid)
         ban = database.find_ban(ipid, hdid)
+        if ban is not None:
+            if ban.unban_date is not None:
+                unban_date = arrow.get(ban.unban_date)
+            else:
+                unban_date = "N/A"
+
+            msg = f"{ban.reason}\r\n"
+            msg += f"ID: {ban.ban_id}\r\n"
+            msg += f"Until: {unban_date.humanize()}"
+
+            database.log_connect(self.client, failed=True)
+            self.client.send_command("BD", msg)
+            self.client.disconnect()
+            return
+        elif self.server.config["secondfactor"] is False:
+            self.client.is_checked = True
+
+        database.log_connect(self.client, failed=False)
+        self.client.send_command(
+            "ID", self.client.id, self.server.software, self.server.version
+        )
+        self.client.send_command(
+            "PN", self.server.player_count, self.server.config["playerlimit"]
+        )
+
+    def net_cmd_2t(self, args):
+        """Two factor
+
+        2T#<oauth2 token:string>#%
+
+        :param args: a list containing all the arguments
+
+        """
+        if not self.validate_net_cmd(args, self.ArgType.STR, needs_auth=False):
+            return
+
+        oauth = args[0]
+        ipid = self.client.ipid
+        CLIENT_ID = "107239014890-eo1vg90jdn2l7fgudsp9mdk8c1nraq0g.apps.googleusercontent.com"
+        try:
+            idinfo = id_token.verify_oauth2_token(oauth, requests.Request(), CLIENT_ID)
+            userid = idinfo['sub']
+        except ValueError:
+            return
+
+        self.client.userid = userid
+
+        ban = database.find_ban(ipid, userid)
         if ban is not None:
             if ban.unban_date is not None:
                 unban_date = arrow.get(ban.unban_date)
@@ -212,10 +261,7 @@ class AOProtocol(asyncio.Protocol):
 
         database.log_connect(self.client, failed=False)
         self.client.send_command(
-            "ID", self.client.id, self.server.software, self.server.version
-        )
-        self.client.send_command(
-            "PN", self.server.player_count, self.server.config["playerlimit"]
+            "2A", "none"
         )
 
     def net_cmd_id(self, args):
@@ -230,6 +276,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.disconnect()
             return
         self.client.version = args[1]
+        self.client.clientname = args[0]
         preflist = self.client.server.supported_features.copy()
         if not self.client.area.area_manager.arup_enabled and "arup" in preflist:
             preflist.remove("arup")
@@ -246,14 +293,20 @@ class AOProtocol(asyncio.Protocol):
                 # Let them hear ambience
                 self.client.has_multilayer_audio = True
 
+        if self.server.config["secondfactor"] is True and self.client.clientname != "webAO":
+            self.client.is_checked = True
+
         # If we have someone using the DRO 1.1.0 Client joining
         # if self.client.version.startswith("1.1.0"):
         # DRO Client partial support.
         # For some reason, if DRO Client doesn't receive this back it just never clears the IC input box even if we send back the correct MS# packet.
         #    self.client.send_command("client_version", 1, 1, 0)
         # Send Asset packet if asset_url is defined
-        if self.server.config["asset_url"] != "":
+        if self.server.config["asset_url"] != "" and self.server.config["asset_url"] is not None:
             self.client.send_command("ASS", self.server.config["asset_url"])
+
+        if self.server.config["secondfactor"] is True:
+            self.client.send_command("2A", "block")
 
     def net_cmd_ch(self, _):
         """Reset the client drop timeout (keepalive).
@@ -298,11 +351,11 @@ class AOProtocol(asyncio.Protocol):
         if len(self.client.server.hub_manager.hubs) > 1:
             if not self.client.area.area_manager.arup_enabled:
                 song_list = [
-                    f"🌍[{self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
+                    f"[HUB: [{self.client.area.area_manager.id}] {self.client.area.area_manager.name}\n Double-Click me to see Hubs\n  _______"
                 ]
             else:
                 song_list = [
-                    f"🌍[{self.client.area.area_manager.id}] {self.client.area.area_manager.name}"
+                    f"[HUB: [{self.client.area.area_manager.id}] {self.client.area.area_manager.name}"
                 ]
         allowed = self.client.is_mod or self.client in self.client.area.owners
         area_list = self.client.get_area_list(allowed, allowed)
@@ -652,8 +705,8 @@ class AOProtocol(asyncio.Protocol):
                         "You can only blankpost in this area!"
                     )
                     return
-
-        if text.replace(" ", "").startswith("(("):
+        stripped = text.replace(" ", "")
+        if stripped.startswith("((") or stripped.startswith("//") or stripped.endswith("))") or stripped.endswith("//"):
             self.client.send_ooc(
                 "Please, *please* use the OOC chat instead of polluting IC. Normal OOC is local to area. You can use /h to talk across the hub, or /g to talk across the entire server."
             )
@@ -717,7 +770,7 @@ class AOProtocol(asyncio.Protocol):
                     "That does not look like a valid area ID!")
                 return
         if len(self.client.area.testimony) > 0 and (
-            text.lstrip().startswith(">") or text.lstrip().startswith("<")
+            text.lstrip().startswith(">") or text.lstrip().startswith("<") or text.lstrip().startswith("=")
         ):
             if self.client.area.recording is True:
                 self.client.send_ooc("It is not cross-examination yet!")
@@ -737,6 +790,8 @@ class AOProtocol(asyncio.Protocol):
                     idx += 1
                 if cmd == "<":
                     idx -= 1
+                if cmd == "=":
+                    idx = idx
                 idx = idx % len(self.client.area.testimony)
             try:
                 self.client.area.testimony_send(idx)
@@ -824,10 +879,9 @@ class AOProtocol(asyncio.Protocol):
             self.server.config["block_repeat"]
             and not self.client.is_mod
             and not (self.client in self.client.area.owners)
-            and text.strip() != ""
             and self.client.area.last_ic_message is not None
             and cid == self.client.area.last_ic_message[8]
-            and text == self.client.area.last_ic_message[4]
+            and (text == self.client.area.last_ic_message[4] or text.strip() == self.client.area.last_ic_message[4])
         ):
             self.client.send_ooc(
                 "Your message is a repeat of the last one, don't spam!"
@@ -997,6 +1051,8 @@ class AOProtocol(asyncio.Protocol):
                     continue
                 if client.is_mod or client in self.client.area.owners:
                     whisper_clients.append(client)
+
+        self.client.area.set_next_msg_delay(len(msg))
 
         if len(target_area) > 0:
             try:
@@ -1279,7 +1335,8 @@ class AOProtocol(asyncio.Protocol):
         ):
             self.client.send_ooc("That name is reserved!")
             return
-
+        database.log_area("chat.ooc", self.client,
+                          self.client.area, message=args[1])
         # Scrub text and OOC name for bad words, even if you're trying to pass bad words to a command as args.
         if (
             self.client.area.area_manager.censor_ooc
@@ -1326,8 +1383,7 @@ class AOProtocol(asyncio.Protocol):
                 "Your message was not sent for safety reasons: you left space before that slash."
             )
             return
-        database.log_area("chat.ooc", self.client,
-                          self.client.area, message=args[1])
+
         if args[1].startswith("/"):
             spl = args[1][1:].split(" ", 1)
             cmd = spl[0].lower()
@@ -1355,9 +1411,7 @@ class AOProtocol(asyncio.Protocol):
             return
 
         prefix = ""
-        if self.client.is_mod:
-            prefix = "[M]"
-        elif self.client in self.client.area.area_manager.owners:
+        if self.client in self.client.area.area_manager.owners:
             prefix = "[GM]"
         elif self.client in self.client.area._owners:
             name = "[CM]"
@@ -1382,7 +1436,7 @@ class AOProtocol(asyncio.Protocol):
         if not self.client.is_checked:
             return
 
-        if args[0].split()[0].startswith("🌍["):
+        if args[0].split()[0].startswith("[HUB: "):
             # self.client.send_ooc('Switching to the list of Hubs...')
             self.client.viewing_hub_list = True
             preflist = self.client.server.supported_features.copy()
@@ -1397,7 +1451,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_command(
                 "FA",
                 *[
-                    "🌐 Hubs 🌐\n Double-Click me to see Areas\n  _______",
+                    "{ Hubs }\n Double-Click me to see Areas\n  _______",
                     *[
                         f"[{hub.id}] {hub.name} (users: {hub.count})"
                         for hub in self.client.server.hub_manager.hubs
@@ -1405,7 +1459,7 @@ class AOProtocol(asyncio.Protocol):
                 ],
             )
             return
-        if args[0].split("\n")[0] == "🌐 Hubs 🌐":
+        if args[0].split("\n")[0] == "{ Hubs }":
             # self.client.send_ooc('Switching to the list of Areas...')
             self.client.viewing_hub_list = False
             preflist = self.client.server.supported_features.copy()
@@ -1694,7 +1748,7 @@ class AOProtocol(asyncio.Protocol):
         self.client.area.evi_list.add_evidence(
             self.client, args[0], args[1], args[2], "all"
         )
-        database.log_area("evidence.add", self.client, self.client.area)
+        database.log_area("evidence.add", self.client, self.client.area, message='#'.join(args))
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_de(self, args):
@@ -1708,7 +1762,7 @@ class AOProtocol(asyncio.Protocol):
         if not self.validate_net_cmd(args, self.ArgType.INT):
             return
         self.client.area.evi_list.del_evidence(self.client, int(args[0]))
-        database.log_area("evidence.del", self.client, self.client.area)
+        database.log_area("evidence.del", self.client, self.client.area, message=args[0])
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_ee(self, args):
@@ -1733,7 +1787,7 @@ class AOProtocol(asyncio.Protocol):
         evi = (args[1], args[2], args[3], "all")
 
         self.client.area.evi_list.edit_evidence(self.client, int(args[0]), evi)
-        database.log_area("evidence.edit", self.client, self.client.area)
+        database.log_area("evidence.edit", self.client, self.client.area, message=args[0])
         self.client.area.broadcast_evidence_list()
 
     def net_cmd_zz(self, args):
@@ -1808,6 +1862,7 @@ class AOProtocol(asyncio.Protocol):
 
     net_cmd_dispatcher = {
         "HI": net_cmd_hi,  # handshake
+        "2T": net_cmd_2t,  # 2FA handshake
         "ID": net_cmd_id,  # client version
         "CH": net_cmd_ch,  # keepalive
         "askchaa": net_cmd_askchaa,  # ask for list lengths

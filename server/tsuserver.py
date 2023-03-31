@@ -144,6 +144,8 @@ class TsuServer3:
                 new_websocket_client(
                     self), bound_ip, self.config["websocket_port"]
             )
+            print("Websocket Server started and is listening on port {}".format(
+            self.config["websocket_port"]))
             asyncio.ensure_future(ao_server_ws)
 
         if self.config["use_masterserver"]:
@@ -238,15 +240,15 @@ class TsuServer3:
 
         """
         if client.area:
-            area = client.area
             if (
-                not area.dark
-                and not area.force_sneak
+                not client.area.dark
+                and not client.area.force_sneak
                 and not client.sneaking
                 and not client.hidden
             ):
-                area.broadcast_ooc(
+                client.area.broadcast_ooc(
                     f"[{client.id}] {client.showname} has disconnected.")
+            area = client.area
             area.remove_client(client)
         self.client_manager.remove_client(client)
 
@@ -304,6 +306,8 @@ class TsuServer3:
             self.config["block_relative"] = False
         if "global_chat" not in self.config:
             self.config["global_chat"] = True
+        if "secondfactor" not in self.config:
+            self.config["secondfactor"] = False
 
     def load_command_aliases(self):
         """Load a list of alternative command names."""
@@ -420,12 +424,8 @@ class TsuServer3:
         :param as_mod: add moderator prefix (Default value = False)
 
         """
-        if as_mod:
-            as_mod = "[M]"
-        else:
-            as_mod = ""
         ooc_name = (
-            f"<dollar>G[{client.area.area_manager.abbreviation}]|{as_mod}{client.name}"
+            f"<dollar>G[{client.area.abbreviation}]|{client.name}({client.char_name})"
         )
         self.send_all_cmd_pred("CT", ooc_name, msg,
                                pred=lambda x: not x.muted_global)

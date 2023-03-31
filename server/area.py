@@ -236,6 +236,7 @@ class Area:
 
         self.music_looper = None
         self.next_message_time = 0
+        self.next_message_delay = 100
         self.judgelog = []
         self.music = ""
         self.music_player = ""
@@ -893,6 +894,15 @@ class Area:
                 if c.area.background != bg:
                     c.send_command("BN", c.area.background)
 
+    def set_next_msg_delay(self, msg_length: int):
+        """Set the delay when the next IC message can be send by any client.
+        Args:
+            msg_length (int): estimated length of message (ms)
+        """
+
+        delay = min(2900, 60 * msg_length)
+        self.next_message_time = round(time.time() * 1000.0 + delay + self.next_message_delay)
+
     def broadcast_ooc(self, msg):
         """
         Broadcast an OOC message to all clients in the area.
@@ -1222,6 +1232,10 @@ class Area:
             if len(self.testimony) >= 30:
                 client.send_ooc(
                     "Maximum testimony statement amount reached! (30)")
+                return
+            if not (client in self.owners):
+                client.send_ooc(
+                    "You need to be CM to record testimonies")
                 return
             if msg.startswith("++"):
                 msg = msg[2:]

@@ -287,8 +287,14 @@ class Database:
         reason: str
 
         def __post_init__(self):
-            self.ban_date = arrow.get(self.ban_date).datetime
-            self.unban_date = arrow.get(self.unban_date).datetime
+            if self.ban_date is not None:
+                self.ban_date = arrow.get(self.ban_date).datetime
+            else:
+                self.ban_date = "0001-01-01"
+            if self.unban_date is not None:
+                self.unban_date = arrow.get(self.unban_date).datetime
+            else:
+                self.unban_date = "9999-12-31"
 
         @property
         def ipids(self):

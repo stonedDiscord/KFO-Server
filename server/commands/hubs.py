@@ -321,7 +321,7 @@ def ooc_cmd_area_remove(client, arg):
             "Invalid number of arguments. Use /area_remove <aid>.")
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_area_rename(client, arg):
     """
     Rename the area to <name>. The area is the one you're currently in
@@ -406,7 +406,7 @@ def ooc_cmd_area_switch(client, arg):
         raise
 
 
-@mod_only(area_owners=True)
+@mod_only()
 def ooc_cmd_area_pref(client, arg):
     """
     Toggle a preference on/off for an area.
@@ -850,7 +850,7 @@ def ooc_cmd_info(client, arg):
         )
         database.log_area("info.change", client, client.area, message=arg)
 
-
+@mod_only()
 def ooc_cmd_gm(client, arg):
     """
     Add a game master for the current Hub.
@@ -940,7 +940,7 @@ def ooc_cmd_ungm(client, arg):
             raise
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_broadcast(client, arg):
     """
     Start broadcasting your IC, Music and Judge buttons to specified area ID's.
@@ -984,7 +984,7 @@ def ooc_cmd_clear_broadcast(client, arg):
     client.send_ooc("Your broadcast list has been cleared.")
 
 
-@mod_only(area_owners=True)
+@mod_only(hub_owners=True)
 def ooc_cmd_hpset(client, arg):
     """
     Set hp in area or multiple areas.
