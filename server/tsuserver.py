@@ -61,6 +61,7 @@ class TsuServer3:
         self.music_list = []
         self.backgrounds = None
         self.zalgo_tolerance = None
+        self.zalgo_regex = None
         self.ipRange_bans = []
         self.geoIpReader = None
         self.useGeoIp = False
@@ -152,6 +153,8 @@ class TsuServer3:
 
         if self.config["zalgo_tolerance"]:
             self.zalgo_tolerance = self.config["zalgo_tolerance"]
+        if self.config["zalgo_regex"]:
+            self.zalgo_regex = self.config["zalgo_regex"]
 
         if "bridgebot" in self.config and self.config["bridgebot"]["enabled"]:
             try:
@@ -290,6 +293,8 @@ class TsuServer3:
 
         if "zalgo_tolerance" not in self.config:
             self.config["zalgo_tolerance"] = 3
+        if "zalgo_regex" not in self.config:
+            self.config["zalgo_regex"] = "[\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f\u115f\u1160\u3164]"
 
         if isinstance(self.config["modpass"], str):
             self.config["modpass"] = {"default": {
