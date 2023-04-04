@@ -906,7 +906,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc("You shouldn't send links in IC!")
             return
 
-        msg = dezalgo(text, self.server.zalgo_tolerance)
+        msg = dezalgo(text, regex=self.server.zalgo_tolerance, tolerance=self.server.zalgo_tolerance)
         if self.client.shaken:
             msg = self.client.shake_message(msg)
         if self.client.disemvowel:
@@ -1363,7 +1363,7 @@ class AOProtocol(asyncio.Protocol):
             name = "[CM]"
 
         name = f"{prefix}{self.client.name}"
-        args[1] = dezalgo(args[1], self.server.zalgo_tolerance)
+        args[1] = dezalgo(args[1], regex=self.server.zalgo_tolerance, tolerance=self.server.zalgo_tolerance)
         if self.client.shaken:
             args[1] = self.client.shake_message(args[1])
         if self.client.disemvowel:
