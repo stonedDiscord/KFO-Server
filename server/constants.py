@@ -40,7 +40,7 @@ class MusicEffect(IntFlag):
     SYNC_POS = 4
 
 
-def dezalgo(input, tolerance=3):
+def dezalgo(input, regex="[\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f\u115f\u1160\u3164]" tolerance=3):
     """
     Turns any string into a de-zalgo'd version, with a tolerance to allow for normal diacritic use.
 
@@ -56,8 +56,7 @@ def dezalgo(input, tolerance=3):
     """
 
     filtered = re.sub(
-        "([\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe20-\ufe2f"
-        + "\u115f\u1160\u3164]"
+        "(" + regex
         + "{"
         + re.escape(str(tolerance))
         + ",})",
