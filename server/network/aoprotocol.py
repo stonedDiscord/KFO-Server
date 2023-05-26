@@ -22,6 +22,7 @@ from server.constants import dezalgo, censor, contains_URL
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server import database
 import time
+import pytimeparse
 import arrow
 from enum import Enum
 import asyncio
@@ -212,6 +213,13 @@ class AOProtocol(asyncio.Protocol):
             return
         else:
             self.client.is_checked = True
+        
+        connect_time = database.find_first_connect(ipid, hdid)
+        if connect_time > (arrow.now-pytimeparse.parse(self.server.config["waittime"], granularity="minutes")):
+            database.log_connect(self.client, failed=True)
+            self.client.send_command("BD", "New user detected - Please check back later")
+            self.client.disconnect()
+            return
 
         database.log_connect(self.client, failed=False)
         self.client.send_command(
