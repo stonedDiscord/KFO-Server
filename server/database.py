@@ -489,22 +489,9 @@ class Database:
         """Check when an IPID and/or HDID first connected."""
         with self.db as conn:
             # This query find the first connect event for either IPID or HDID
-            connect_ip = conn.execute(
-                dedent(
-                    """
-                SELECT event_time FROM connect_events WHERE ipid = ? LIMIT 1
-                """
-                ),
-                (ipid),
-            ).fetchone()
-            connect_hd = conn.execute(
-                dedent(
-                    """
-                SELECT event_time FROM connect_events WHERE hdid = ? LIMIT 1
-                """
-                ),
-                (hdid),
-            ).fetchone()
+            connect_ip = conn.execute("SELECT event_time FROM connect_events WHERE ipid = ?", (ipid,)).fetchone()[0]
+            connect_hd = conn.execute("SELECT event_time FROM connect_events WHERE hdid = ?", (hdid,)).fetchone()[0]
+
             if connect_ip <= connect_hd:
                 return connect_ip
             elif connect_hd < connect_ip:
