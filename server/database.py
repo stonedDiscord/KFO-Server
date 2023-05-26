@@ -489,15 +489,21 @@ class Database:
         """Check when an IPID and/or HDID first connected."""
         with self.db as conn:
             # This query find the first connect event for either IPID or HDID
-            connect_ip = conn.execute("SELECT event_time FROM connect_events WHERE ipid = ?", (ipid,)).fetchone()[0]
-            connect_hd = conn.execute("SELECT event_time FROM connect_events WHERE hdid = ?", (hdid,)).fetchone()[0]
-
-            if connect_ip <= connect_hd:
-                return connect_ip
-            elif connect_hd < connect_ip:
-                return connect_hd
+            connect_ip = conn.execute("SELECT event_time FROM connect_events WHERE ipid = ?", (ipid,)).fetchone()
+            connect_hd = conn.execute("SELECT event_time FROM connect_events WHERE hdid = ?", (hdid,)).fetchone()
+            connect_ip = connect_ip[0] if connect_ip else None
+            connect_hd = connect_hd[0] if connect_hd else None
+            if connect_hd and connect_ip:
+                if connect_ip <= connect_hd:
+                    return arrow.get(connect_ip)
+                elif connect_hd < connect_ip:
+                    return arrow.get(connect_hd)
+            elif connect_hd:
+                return arrow.get(connect_hd)
+            elif connect_ip:
+                return arrow.get(connect_ip)
             else:
-                return None
+                return arrow.utcnow()
 
     def log_misc(self, event_subtype, client=None, target=None, data=None):
         """
