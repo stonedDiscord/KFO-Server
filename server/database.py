@@ -484,6 +484,33 @@ class Database:
                 ),
                 (client.ipid, client.hdid, failed),
             )
+            
+    def find_first_connect(self, ipid=None, hdid=None):
+        """Check when an IPID and/or HDID first connected."""
+        with self.db as conn:
+            # This query find the first connect event for either IPID or HDID
+            connect_ip = conn.execute(
+                dedent(
+                    """
+                SELECT event_time FROM connect_events WHERE ipid = ? LIMIT 1
+                """
+                ),
+                (ipid),
+            ).fetchone()
+            connect_hd = conn.execute(
+                dedent(
+                    """
+                SELECT event_time FROM connect_events WHERE hdid = ? LIMIT 1
+                """
+                ),
+                (hdid),
+            ).fetchone()
+            if connect_ip <= connect_hd:
+                return connect_ip
+            elif connect_hd < connect_ip
+                return connect_hd
+            else:
+                return None
 
     def log_misc(self, event_subtype, client=None, target=None, data=None):
         """
