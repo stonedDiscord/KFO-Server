@@ -507,7 +507,7 @@ class Database:
             ).fetchone()
             if connect_ip <= connect_hd:
                 return connect_ip
-            elif connect_hd < connect_ip
+            elif connect_hd < connect_ip:
                 return connect_hd
             else:
                 return None
