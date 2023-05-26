@@ -215,7 +215,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.is_checked = True
         
         connect_time = database.find_first_connect(ipid, hdid)
-        if connect_time > (arrow.now-pytimeparse.parse(self.server.config["waittime"], granularity="minutes")):
+        if arrow.get(connect_time) > arrow.utcnow().shift(minutes=-self.server.config["waittime"])):
             database.log_connect(self.client, failed=True)
             self.client.send_command("BD", "New user detected - Please check back later")
             self.client.disconnect()
