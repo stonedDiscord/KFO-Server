@@ -51,6 +51,7 @@ class ClientManager:
             self.area = server.hub_manager.default_hub().default_area()
             self.server = server
             self.name = ""
+            self.iniswap = ""
             self.is_mod = False
             self.mod_profile_name = None
             self.is_dj = True
@@ -69,9 +70,15 @@ class ClientManager:
             self.ipid = ipid
             self.version = ""
 
-            # Pairing stuff
+            # Pairing character ID
             self.charid_pair = -1
+            # Override if using the /pair command will lock "charid_pair" from being changed by MS packet
+            self.charid_pair_override = False
+            # Pairing order, either 0 (in front) or 1 (behind)
+            self.pair_order = 0
+            # Pairing offset
             self.offset_pair = 0
+
             self.last_sprite = ""
             self.flip = 0
             self.claimed_folder = ""
@@ -102,6 +109,14 @@ class ClientManager:
                 x * self.server.config["wtce_floodguard"]["interval_length"]
                 for x in range(
                     self.server.config["wtce_floodguard"]["times_per_interval"]
+                )
+            ]
+            self.ooc_counter = 0
+            self.ooc_mute_time = 0
+            self.ooc_time = [
+                x * self.server.config["ooc_floodguard"]["interval_length"]
+                for x in range(
+                    self.server.config["ooc_floodguard"]["times_per_interval"]
                 )
             ]
             # security stuff
@@ -173,6 +188,9 @@ class ClientManager:
             # The currently playing audio for this client. Keeping track so we don't replay the same audio erroneously
             # (such as in the case of music_autoplay areas)
             self.playing_audio = ["", ""]
+            
+            # rainbowtext hell
+            self.rainbow = False
 
         def send_raw_message(self, msg):
             """
@@ -567,6 +585,40 @@ class ClientManager:
                 return self.server.config["music_change_floodguard"]["mute_length"]
             self.wtce_counter = (self.wtce_counter + 1) % times_per_interval
             self.wtce_time[self.wtce_counter] = time.time()
+            return 0
+        
+        def ooc_mute(self):
+            """
+            Check if the client can use OOC or not.
+            :returns: how many seconds the client must wait to use OOC
+            """
+            if self.is_mod or self in self.area.owners:
+                return 0
+            if self.ooc_mute_time:
+                if (
+                    time.time() - self.ooc_mute_time
+                    < self.server.config["ooc_floodguard"]["mute_length"]
+                ):
+                    return self.server.config["ooc_floodguard"]["mute_length"] - (
+                        time.time() - self.ooc_mute_time
+                    )
+                else:
+                    self.ooc_mute_time = 0
+            times_per_interval = self.server.config["ooc_floodguard"][
+                "times_per_interval"
+            ]
+            interval_length = self.server.config["ooc_floodguard"]["interval_length"]
+            if (
+                time.time()
+                - self.ooc_time[
+                    (self.ooc_counter - times_per_interval + 1) % times_per_interval
+                ]
+                < interval_length
+            ):
+                self.ooc_mute_time = time.time()
+                return self.server.config["music_change_floodguard"]["mute_length"]
+            self.ooc_counter = (self.ooc_counter + 1) % times_per_interval
+            self.ooc_time[self.ooc_counter] = time.time()
             return 0
 
         def reload_character(self):
@@ -1623,6 +1675,19 @@ class ClientManager:
             parts = message.split()
             random.shuffle(parts)
             return " ".join(parts)
+
+        def rainbow_message(self, message):
+            """Turn the message into rainbows (base color assumed to be blue)"""
+            # red orange yellow green cyan blue magenta
+            color_array = ['~', '|', 'º', '`', '√', '', '№']
+            constructed_message = ''
+            # pseudo-randomize the rainbows based on msg length
+            index = len(message) % len(color_array)
+            for symbol in message:
+                symbol = f'{color_array[index]}{symbol}{color_array[index]}'
+                constructed_message += symbol
+                index = (index + 1) % len(color_array)
+            return constructed_message
 
     def __init__(self, server):
         self.clients = set()

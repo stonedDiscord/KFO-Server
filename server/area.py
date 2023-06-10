@@ -575,7 +575,7 @@ class Area:
             self.set_ambience(self.ambience)
         if self.music_autoplay:
             for client in self.clients:
-                if client.music != client.playing_audio[0]:
+                if self.music != client.playing_audio[0]:
                     client.send_command(
                         "MC", self.music, -1, "", self.music_looping, 0, self.music_effects
                     )
@@ -1049,8 +1049,8 @@ class Area:
                     pos = "pta"
             # If we're on blue team
             elif client.char_id in client.area.blue_team:
-                # Set our color to cyan
-                color = 7
+                # Set our color to blue
+                color = 4
                 # Offset them to the right
                 offset_pair = 25
                 # Offset them to the left
@@ -1105,9 +1105,12 @@ class Area:
                             break
                     # Speaker always goes in front
                     charid_pair = f"{charid_pair}^0"
-            # DRO 1.0.0 client compatibility, tell the client we acknowledged their MS packet
-            # TODO: actually only send this if we're on a DRO client
-            client.send_command("ackMS")
+
+            # rainbow text!?!?!?
+            if client.rainbow:
+                msg = client.rainbow_message(msg)
+                color = 4
+
             if (
                 msg.strip() != ""
                 or self.last_ic_message is None
@@ -1317,7 +1320,7 @@ class Area:
         for char in "@$`|_~%\\}{":
             msg = msg.replace(char, "")
         # Very basic approximation of text length
-        delay = len(msg) * 40
+        delay = len(msg) * 40 + 40
         # Minimum area msg delay
         delay = max(self.min_msg_delay, delay)
         # Maximum area msg delay
@@ -1333,6 +1336,11 @@ class Area:
         :param char: name of character
 
         """
+        if char.lower() != client.char_name.lower():
+            client.iniswap = char
+        else:
+            client.iniswap = ""
+        
         if self.iniswap_allowed:
             return False
         # Our client is narrating or blankposting via slash command

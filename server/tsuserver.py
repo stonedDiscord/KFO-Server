@@ -283,6 +283,12 @@ class TsuServer3:
                 "interval_length": 0,
                 "mute_length": 0,
             }
+        if "ooc_floodguard" not in self.config:
+            self.config["ooc_floodguard"] = {
+                "times_per_interval": 1,
+                "interval_length": 0,
+                "mute_length": 0,
+            }
 
         if "zalgo_tolerance" not in self.config:
             self.config["zalgo_tolerance"] = 3
@@ -300,9 +306,11 @@ class TsuServer3:
             self.config["block_relative"] = False
         if "secondfactor" not in self.config:
             self.config["secondfactor"] = False
+        if "global_chat" not in self.config:
+            self.config["global_chat"] = True
 
     def load_command_aliases(self):
-        """Load a list of banned words to scrub from chats."""
+        """Load a list of alternative command names."""
         try:
             with open(
                 "config/command_aliases.yaml", "r", encoding="utf-8"
@@ -509,6 +517,7 @@ class TsuServer3:
         area.send_ic(
             folder=self.config["bridgebot"]["character"],
             anim=self.config["bridgebot"]["emote"],
+            showname=name,
             msg=message,
             pos=self.config["bridgebot"]["pos"],
         )
