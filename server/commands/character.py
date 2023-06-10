@@ -1199,3 +1199,30 @@ def ooc_cmd_charlist(client, arg):
         raise
     except Exception:
         client.send_ooc("File not found!")
+
+def ooc_cmd_webfiles(client, arg):
+    """
+    Gives a link to download each characters files from webAO
+    Usage: /webfiles <id>
+    """
+    args = arg.split(" ")
+
+    try:
+        if args[0] == "*":
+            targets = [
+                c
+                for c in client.area.clients
+                if c != client and c != client.area.owners
+            ]
+        else:
+            targets = client.server.client_manager.get_targets(
+                client, TargetType.ID, int(args[0]), False
+            )
+    except ValueError:
+        raise ArgumentError("Target ID must be a number or *.")
+
+    try:
+        for c in targets:
+            client.send_ooc(f"To download the files, visit https://attorneyonline.github.io/webDownloader/index.html?char={c.iniswap}")
+    except Exception:
+        raise ClientError("You must specify a target. Use /webfiles <id>")
