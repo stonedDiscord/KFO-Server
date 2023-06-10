@@ -39,6 +39,27 @@ class MusicEffect(IntFlag):
     FADE_OUT = 2
     SYNC_POS = 4
 
+    
+def remove_big(input, tolerance)
+    """
+    Removes Overly large unicode characters
+    
+    U+FDF0 - U+FDFD - Arabic ligature
+    U+12000-U+123FF - Cuneiform
+    U+12400-U+1247F - Cuneiform Numbers and Punctuation
+    U+12480-U+1254F - Early Dynastic Cuneiform
+    """
+    
+    filtered = re.sub(
+        "([\ufdf0-\ufdfd\u12000-\u1254F]"
+        + "{"
+        + re.escape(str(tolerance))
+        + ",})",
+        "",
+        input,
+    )
+    return filtered
+
 
 def dezalgo(input, tolerance=3):
     """
