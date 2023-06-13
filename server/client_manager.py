@@ -127,7 +127,7 @@ class ClientManager:
             # movement system stuff
             self.last_move_time = 0
             # If true, /getarea is called automatically when moving into a new area
-            self.autogetarea = True
+            self.autogetarea = False
 
             # client status stuff
             self._showname = ""
