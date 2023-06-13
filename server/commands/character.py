@@ -1213,7 +1213,6 @@ def ooc_cmd_webfiles(client, arg):
             targets = [
                 c
                 for c in client.area.clients
-                if c != client and c != client.area.owners
             ]
         else:
             targets = client.server.client_manager.get_targets(
