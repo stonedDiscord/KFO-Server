@@ -48,7 +48,7 @@ __all__ = [
     "ooc_cmd_hpset",
 ]
 
-
+@mod_only()
 def ooc_cmd_hub(client, arg):
     """
     List hubs, or go to another hub.
@@ -94,7 +94,7 @@ def ooc_cmd_hub(client, arg):
         raise
 
 
-@mod_only(hub_owners=True)
+@mod_only()
 def ooc_cmd_save_hub(client, arg):
     """
     Save the current Hub in the server's storage/hubs/<name>.yaml file.
@@ -148,7 +148,7 @@ def ooc_cmd_save_hub(client, arg):
         raise
 
 
-@mod_only(hub_owners=True)
+@mod_only()
 def ooc_cmd_load_hub(client, arg):
     """
     Load Hub data from the server's storage/hubs/<name>.yaml file.
@@ -189,7 +189,7 @@ def ooc_cmd_load_hub(client, arg):
         client.send_ooc("Success, sending ARUP and refreshing music...")
 
 
-@mod_only(hub_owners=True)
+@mod_only()
 def ooc_cmd_overlay_hub(client, arg):
     """
     Overlay Hub data from the server's storage/hubs/<name>.yaml file over the current hub.
@@ -240,7 +240,7 @@ def ooc_cmd_list_hubs(client, arg):
     client.send_ooc(text)
 
 
-@mod_only(hub_owners=True)
+@mod_only()
 def ooc_cmd_clear_hub(client, arg):
     """
     Clear the current hub and reset it to its default state.
@@ -258,7 +258,7 @@ def ooc_cmd_clear_hub(client, arg):
         raise
 
 
-@mod_only(hub_owners=True)
+@mod_only()
 def ooc_cmd_rename_hub(client, arg):
     """
     Rename the hub you are currently in to <name>.
