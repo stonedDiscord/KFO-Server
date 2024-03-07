@@ -641,6 +641,10 @@ class Area:
         if client.char_id is not None:
             database.log_area("area.join", client, self)
 
+        if not client.hidden:
+            self.area_manager.send_arup_players()
+            self.send_command('JP',client.char_id)
+
         if self.music_autoplay and self.music != client.playing_audio[0]:
             client.send_command(
                 "MC", self.music, -1, "", self.music_looping, 0, self.music_effects
@@ -754,6 +758,7 @@ class Area:
             database.log_area("area.leave", client, self)
         if not client.hidden:
             self.area_manager.send_arup_players()
+            self.send_command('RP',client.char_id)
 
         # Update everyone's available characters list
         # Commented out due to potentially causing clientside lag...
