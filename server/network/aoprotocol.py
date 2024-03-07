@@ -1,24 +1,5 @@
-# KFO-Server, an Attorney Online server
-#
-# Copyright (C) 2020 Crystalwarrior <varsash@gmail.com>
-#
-# Derivative of tsuserver3, an Attorney Online server. Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 from .. import commands
-from server.constants import dezalgo, censor, contains_URL
+from server.constants import dezalgo, censor, contains_URL, derelative
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server import database
 import time
@@ -30,8 +11,7 @@ import unicodedata
 import traceback
 import logging
 
-logger_debug = logging.getLogger("debug")
-logger = logging.getLogger("events")
+logger = logging.getLogger("aoprotocol")
 
 
 class AOProtocol(asyncio.Protocol):
@@ -81,7 +61,7 @@ class AOProtocol(asyncio.Protocol):
             self.client.send_ooc(
                 "Your last action was dropped because it was too big! Contact the server administrator for more information."
             )
-            logger_debug.debug(f"Buffer overflow from {ipid} with {len(buf)}")
+            logger.debug("Buffer overflow from %s with %s", ipid, len(buf))
             return
         self.buffer = buf
         for msg in self.get_messages():
@@ -91,8 +71,8 @@ class AOProtocol(asyncio.Protocol):
                 cmd, *args = msg.split("#")
                 self.net_cmd_dispatcher[cmd](self, args)
             except KeyError:
-                logger_debug.debug(
-                    f"Unknown incoming message from {ipid}: {msg}")
+                logger.debug(
+                    "Unknown incoming message from %s: %s", ipid, msg)
             except Exception:
                 print(traceback.format_exc())
                 self.client.disconnect()
@@ -133,7 +113,7 @@ class AOProtocol(asyncio.Protocol):
 
         """
         if self.client is not None:
-            logger.debug(f"{self.client.ipid} disconnected.")
+            logger.debug("%s disconnected.", self.client.ipid)
             self.server.remove_client(self.client)
         if self.ping_timeout is not None:
             self.ping_timeout.cancel()
@@ -619,24 +599,15 @@ class AOProtocol(asyncio.Protocol):
                 "You may not iniswap while you are charcursed!")
             return
         if (self.server.config["block_relative"]):
-            pre = pre.replace(
-                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
-            anim = anim.replace(
-                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
-            folder = folder.replace(
-                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
-            sfx = sfx.replace(
-                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
-            pos = pos.replace(
-                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
-            frames_shake = frames_shake.replace(
-                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
-            frames_realization = frames_realization.replace(
-                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
-            frames_sfx = frames_sfx.replace(
-                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
-            effect = effect.replace(
-                "../", "").replace("/..", "").replace("..\\", "").replace("\\..", "")
+            pre = derelative(pre)
+            anim = derelative(anim)
+            folder = derelative(folder)
+            sfx = derelative(sfx)
+            pos = derelative(pos)
+            frames_shake = derelative(frames_shake)
+            frames_realization = derelative(frames_realization)
+            frames_sfx = derelative(frames_sfx)
+            effect = derelative(effect)
 
         if not self.client.is_mod and not (self.client in self.client.area.owners):
             if not self.client.area.blankposting_allowed:
@@ -645,6 +616,7 @@ class AOProtocol(asyncio.Protocol):
                     len(re.sub(r"[{}\\`|(~~)]", "", text).replace(" ", "")) < 3
                     and not text.startswith("<")
                     and not text.startswith(">")
+                    and not text.startswith("=")
                 ):
                     self.client.send_ooc(
                         "Blankposting is forbidden in this area!"
@@ -721,7 +693,7 @@ class AOProtocol(asyncio.Protocol):
                     "That does not look like a valid area ID!")
                 return
         if len(self.client.area.testimony) > 0 and (
-            text.lstrip().startswith(">") or text.lstrip().startswith("<")
+            text.lstrip().startswith(">") or text.lstrip().startswith("<") or text.lstrip().startswith("=")
         ):
             if self.client.area.recording is True:
                 self.client.send_ooc("It is not cross-examination yet!")
@@ -741,6 +713,8 @@ class AOProtocol(asyncio.Protocol):
                     idx += 1
                 if cmd == "<":
                     idx -= 1
+                if cmd == "=":
+                    idx = idx
                 idx = idx % len(self.client.area.testimony)
             try:
                 self.client.area.testimony_send(idx)
@@ -1157,6 +1131,71 @@ class AOProtocol(asyncio.Protocol):
                     self.server.bridgebot.queue_message(
                         webname, text, self.client.char_name, anim
                     )
+
+        # Check whether or not the reserved character for Emote Tags is in the message
+        if "¨" in text:
+            emote = anim  # We'll use this variable for storing each new emote in our message
+            messages = text.split("¨")
+            separator = " "
+
+            # Iterate through the split message
+            for index, message in enumerate(messages):
+                stripped_message = message.strip()
+
+                # Check if the stripped message is enclosed in parentheses (indicating an emote)
+                if stripped_message.startswith("<") and stripped_message.endswith(">"):
+                    emote = stripped_message[
+                        1:-1
+                    ]  # Update the emote variable with what we found inside the parentheses
+                else:
+                    # If we swap emotes after a full stop, we add the separator variable (\p\p\p) to make it less abrupt
+                    text = (
+                        stripped_message + separator
+                        if stripped_message.endswith(".")
+                        else stripped_message + " "
+                    )
+                    emote_value = (
+                        anim if index == 0 else emote
+                    )  # Use 'anim' if it's the first message, otherwise use the emote variable
+                    additive_value = (
+                        0 if index == 0 else 1
+                    )  # Set additive_value to 0 for the first message, 1 for subsequent messages
+
+                    self.client.area.send_ic(
+                        self.client,
+                        msg_type,
+                        pre,
+                        folder,
+                        emote_value,
+                        text,
+                        pos,
+                        sfx,
+                        emote_mod,
+                        cid,
+                        sfx_delay,
+                        button,
+                        self.client.evi_list[evidence],
+                        flip,
+                        ding,
+                        color,
+                        showname,
+                        charid_pair,
+                        other_folder,
+                        other_emote,
+                        offset_pair,
+                        other_offset,
+                        other_flip,
+                        nonint_pre,
+                        sfx_looping,
+                        screenshake,
+                        frames_shake,
+                        frames_realization,
+                        frames_sfx,
+                        additive_value,
+                        effect,
+                    )
+
+            return
 
         # Additive only works on same-char messages
         if additive and (
@@ -1810,6 +1849,111 @@ class AOProtocol(asyncio.Protocol):
         """
         self.net_cmd_ct(["opban", "/ban {}".format(args[0])])
 
+    def net_cmd_tt(self, args):
+        """
+        Sended when the client is typing on the IC chat.
+
+        TT#<state: int>#<char_name:str>#<emote_name:str>#%
+        
+        state:      0 = stopped typing
+                |   1 = typing
+        
+        Client implementation details:
+        The state is cleared after the client sends the IC message.
+        Also cleared after 100-200ms of inactivity.
+        """
+        if not self.validate_net_cmd(args, self.ArgType.INT, self.ArgType.STR, self.ArgType.STR, needs_auth=False):
+            return
+
+        #  char_name
+        if args[1].lower() != self.client.char_name.lower():
+        #                       char_name
+            self.client.iniswap = args[1]
+        else:
+            self.client.iniswap = ""
+        # Note: Updating the last_sprite could make things like updating the pair emote by just starting to type.
+        # For example, this could be done by adding:
+        #   self.client.last_sprite = args[2]
+        # TODO: Think if it is a desired behaviour or not.
+        if args[0] in (0, 1):
+            clients = (c for c in self.client.area.clients if c.id != self.client.id)
+            for c in clients:
+                c.send_command("TT", args[0], args[1], args[2])
+
+    def net_cmd_cu(self, args):
+        """
+        
+        Sets the character_URL of the client.
+        
+        CU#<authority:int>#<action:int>#<char_name:str>#<link:str>#%
+        
+        authority:     
+                    0 = server
+                |   1 = client,
+       
+        action:     0 = Delete,
+                |   1 = Add,
+                |   2 = Clear all,
+                    
+        """
+        if not self.validate_net_cmd(args,
+                                     self.ArgType.INT,
+                                     self.ArgType.INT,
+                                     self.ArgType.STR_OR_EMPTY,
+                                     self.ArgType.STR,
+                                     needs_auth=False):
+            return
+
+        if args[0] == 0:
+            # Only the server should have access to the "server" authority
+            # or any other added authority level of the future by default.
+            # If planned to add more authority levels, this "if" should be reconsidered.
+            return
+        #                       char_name
+        #  action
+        if args[1] != 1:
+            # Only you should be able to edit your own user link
+            # Fixes a bug where you could change the character URL of another user.
+            # Or even clear all the user link entries of the area.
+            return
+
+        clients = (c for c in self.client.area.clients if c.id != self.client.id)
+
+        # Clear the char_url that the client sent on the previous CU packet.
+        if args[2] == "":
+            for c in clients:
+                #                   authority, action, char_name
+                c.send_command('CU', args[0], "1", self.client.f_char_name_raw)
+            self.client.char_url = ""
+            return
+
+        # In the case the char_url was already set, clear it.
+        if self.client.char_url != "":
+            for c in clients:
+                # Clear the old char_url
+                #                   authority, action, char_name
+                c.send_command('CU', args[0], "0", self.client.f_char_name_raw)
+
+                # Add the new char_url
+                #                   authority, action, char_name, link
+                c.send_command('CU', args[0], args[1], args[2], args[3])
+        else:
+            for c in clients:
+                # Set the char_url
+                #                   authority, action, char_name, link
+                c.send_command('CU', args[0], args[1], args[2], args[3])
+
+        #  char_name
+        if args[2].lower() != self.client.char_name.lower():
+        #                       char_name
+            self.client.iniswap = args[2]
+        else:
+            self.client.iniswap = ""
+
+        #                      link
+        self.client.char_url = args[3]
+
+
     net_cmd_dispatcher = {
         "HI": net_cmd_hi,  # handshake
         "ID": net_cmd_id,  # client version
@@ -1832,4 +1976,6 @@ class AOProtocol(asyncio.Protocol):
         "ZZ": net_cmd_zz,  # call mod button
         "opKICK": net_cmd_opKICK,  # /kick with guard on
         "opBAN": net_cmd_opBAN,  # /ban with guard on
+        "TT": net_cmd_tt,
+        "CU": net_cmd_cu,
     }

@@ -3,7 +3,7 @@ import os
 import oyaml as yaml  # ordered yaml
 
 from server import database
-from server.constants import TargetType
+from server.constants import TargetType, derelative
 from server.exceptions import ClientError, ArgumentError, AreaError
 from server.constants import dezalgo
 
@@ -119,7 +119,7 @@ def ooc_cmd_save_hub(client, arg):
                     "Server storage full! Please contact the server host to resolve this issue."
                 )
             try:
-                arg = f"{path}/{arg}.yaml"
+                arg = f"{path}/{derelative(arg)}.yaml"
                 if os.path.isfile(arg):
                     with open(arg, "r", encoding="utf-8") as stream:
                         hub = yaml.safe_load(stream)
@@ -159,7 +159,7 @@ def ooc_cmd_load_hub(client, arg):
 
     if arg != "":
         path = "storage/hubs"
-        arg = f"{path}/{arg}.yaml"
+        arg = f"{path}/{derelative(arg)}.yaml"
         if not os.path.isfile(arg):
             raise ArgumentError(f"File not found: {arg}")
         with open(arg, "r", encoding="utf-8") as stream:
@@ -192,7 +192,7 @@ def ooc_cmd_load_hub(client, arg):
 @mod_only(hub_owners=True)
 def ooc_cmd_overlay_hub(client, arg):
     """
-    Overlay Hub data from the server's storage/hubs/<name>.yaml file over the current hub.
+    Overlay Hub data from the server's `storage/hubs/<name>.yaml` file on top of the current hub, only applying properties defined in that yaml.
     Usage: /overlay_hub <name>
     """
     if arg == "" and not client.is_mod:
@@ -200,7 +200,7 @@ def ooc_cmd_overlay_hub(client, arg):
 
     if arg != "":
         path = "storage/hubs"
-        arg = f"{path}/{arg}.yaml"
+        arg = f"{path}/{derelative(arg)}.yaml"
         if not os.path.isfile(arg):
             raise ArgumentError(f"File not found: {arg}")
         with open(arg, "r", encoding="utf-8") as stream:

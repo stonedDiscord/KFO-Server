@@ -3,7 +3,7 @@ import shlex
 import random
 
 from server import database
-from server.constants import TargetType
+from server.constants import TargetType, derelative
 from server.exceptions import ClientError, ServerError, ArgumentError, AreaError
 
 from . import mod_only
@@ -49,9 +49,36 @@ __all__ = [
     "ooc_cmd_showname",
     "ooc_cmd_charlists",
     "ooc_cmd_charlist",
-    "ooc_cmd_webfiles"
+    "ooc_cmd_webfiles",
+    "ooc_cmd_set_url",
+    "ooc_cmd_get_urls",
 ]
 
+
+def ooc_cmd_set_url(client, arg):
+    """
+    This command sets the URL of the current character.
+    That URL is used client-side on AOG and server-side with the /get_link and /get_links commands.
+    Usage: /set_url <url>
+    """
+
+    arg_strip = arg.strip()
+
+    if arg_strip == "":
+        client.send_ooc("URL has been reset successfully.")
+    else:
+        client.send_ooc(f"URL set to {arg_strip}")
+    client.char_url = arg_strip
+
+def ooc_cmd_get_urls(client, arg):
+    """
+    This command returns the server's URL List.
+    Usage: /get_urls
+    """
+    f_server_links = "Server URLs:\n"
+    for name, url in client.server.server_links.items():
+        f_server_links += f"{name}: {url} \n"
+    client.send_ooc(f_server_links)
 
 def ooc_cmd_switch(client, arg):
     """
@@ -722,7 +749,7 @@ def ooc_cmd_save_character_data(client, arg):
 
     try:
         path = "storage/character_data"
-        arg = f"{path}/{arg}.yaml"
+        arg = f"{path}/{derelative(arg)}.yaml"
         client.area.area_manager.save_character_data(arg)
         client.send_ooc(f"Saving as {arg} character data...")
     except AreaError:
@@ -737,7 +764,7 @@ def ooc_cmd_load_character_data(client, arg):
     """
     try:
         path = "storage/character_data"
-        arg = f"{path}/{arg}.yaml"
+        arg = f"{path}/{derelative(arg)}.yaml"
         client.area.area_manager.load_character_data(arg)
         client.send_ooc(f"Loading {arg} character data...")
     except AreaError:

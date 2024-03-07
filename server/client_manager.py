@@ -1,22 +1,3 @@
-# KFO-Server, an Attorney Online server
-#
-# Copyright (C) 2020 Crystalwarrior <varsash@gmail.com>
-#
-# Derivative of tsuserver3, an Attorney Online server. Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 import re
 import string
 import time
@@ -180,6 +161,9 @@ class ClientManager:
             # Currently requested subtheme of this client
             self.subtheme = ""
 
+            # The last char_url set by this client.
+            self.char_url = ""
+
             # Compatibility stuff
             # Determine if this client can support multi-layered audio (such as ambience)
             self.has_multilayer_audio = False
@@ -190,6 +174,9 @@ class ClientManager:
             
             # rainbowtext hell
             self.rainbow = False
+            
+            # rock paper scissors choice
+            self.rps_choice = ""
 
         def send_raw_message(self, msg):
             """
@@ -208,16 +195,18 @@ class ClientManager:
             if args:
                 # Music packet
                 if command == "MC":
+                    channel = int(args[4])
                     # If this MC packet is using multilayer audio and the client doesn't support it
-                    if args[4] != "" and int(args[4]) > 0 and not self.has_multilayer_audio:
+                    # ...or we got an invalid channel
+                    if channel < 0 or (channel > 0 and not self.has_multilayer_audio):
                         # Ignore the packet, don't send the music
                         return
-                    self.playing_audio[args[4]] = args[0]
+                    if channel in [0, 1]:
+                        self.playing_audio[channel] = args[0]
                 # IC Message packet
                 if command == "MS":
-                    # Anim is blank, we're narrating.
-                    # Or the pos is blank, we're using last pos.
-                    if args[3] == "" or args[5] == "":
+                    # The pos is blank, we're using last pos.
+                    if args[5] == "":
                         lst = list(args)
                         if self.area.last_ic_message is not None:
                             # Set the pos to last message's pos
@@ -1046,6 +1035,9 @@ class ClientManager:
                         c.send_ooc(ex)
                         c.unfollow()
                         return
+            # Last error check got done above.
+
+            self.refresh_area_char_links(old_area)
 
             reason = ""
             if (
@@ -1163,6 +1155,114 @@ class ClientManager:
                     "This area is muted - you cannot talk in-character unless invited."
                 )
 
+        # CU Packet
+        # CU#<authority:int>#<action:int>#<char_name:str>#<link:str>#%
+        # Sets the character_URL of the client.
+
+        # authority:
+        #             0 = server
+        #         |   1 = client,
+
+        # action:     0 = Delete,
+        #         |   1 = Add,
+        #         |   2 = Clear all,
+
+        def remove_server_link(self, name):
+            """Removes an server link on this client."""
+            #                     server, delete, name
+            self.send_command("CU", "0", "0", name)
+
+        def add_server_link(self, name, url):
+            """Adds an server link on this client."""
+            #                     server, add, name, url
+            self.send_command("CU", "0", "1", name, url)
+
+        def clear_server_links(self):
+            """Clear all server links of this client."""
+            #                      server, clear
+            self.send_command("CU", "0", "2")
+
+        def remove_user_link(self, char_name):
+            """Removes an user link on this client."""
+            #                      client, delete, char_name
+            self.send_command("CU", "1", "0", char_name)
+
+        def add_user_link(self, char_name, char_url):
+            """Adds an user link on this client."""
+            #                      client, add, char_name, char_url
+            self.send_command("CU", "1", "1", char_name, char_url)
+
+        def clear_user_links(self):
+            """Clear all user links of this client."""
+            #                      client, clear
+            self.send_command("CU", "1", "2")
+
+        def get_new_area_user_links(self):
+            """"
+            Get the char_urls of the new area that the client changed to.
+            And applying the changes.
+            """
+
+            # Clear existing user links on this client
+            self.clear_user_links()
+
+            # Get all the clients in the current area, if they have their user link declared.
+            # While also not including ourselves.
+            clients = (c for c in self.area.clients if c.char_url != "" and c.id != self.id)
+
+            # Get the char_urls of the new area for this client.
+            for client in clients:
+                self.add_user_link(client.char_name, client.char_url)
+
+
+
+        def refresh_area_char_links(self, old_area):
+            """
+            Clears all user links in the old area.
+            And declare them in the new area.
+            The client should be already in the new area for this to be called
+            """
+
+            # Removes the client's user link from the old area
+            # TODO: Maybe take into account than sending the "CU" packet can reveal your cover.
+            # So you could simply treat the hidden client as if they didn't declare their char_url.
+            # Probably using a bool for it.
+            if self.char_url != "":
+                for client in old_area.clients:
+                    client.remove_user_link(self.char_name)
+
+            # Fetch the user links of the new area
+            self.get_new_area_user_links()
+
+            # TODO: Maybe take into account than sending the "CU" packet can reveal your cover.
+            # So you could simply treat the hidden client as if they didn't declare their char_url.
+            # Probably using a bool for it.
+
+            # Declare your user link in the new area for everyone to see
+            if self.char_url != "":
+                for client in self.area.clients:
+                    client.add_user_link(self.char_name, self.char_url)
+
+        def send_server_link_list(self):
+            """
+            Sends the list of server links declared by the server to the client.
+            """
+            if self.server.server_links is None:
+                return
+            for name, url in self.server.server_links.items():
+                self.add_server_link(name, url)
+
+        def refresh_server_link_list(self):
+            """
+            Refreshs the list of server links for this client.
+            Called when the command /refresh is used.
+            """
+            if self.server.server_links is None:
+                return
+            self.clear_server_links()
+            for name, url in self.server.server_links.items():
+                self.add_server_link(name, url)
+
         def get_area_list(self, hidden=False, unlinked=False):
             area_list = []
             for area in self.area.area_manager.areas:
@@ -1210,7 +1310,7 @@ class ClientManager:
                 msg += f'\n{self.get_area_info(area.id, highlight_self=True)}'
             self.send_ooc(msg)
 
-        def get_area_info(self, area_id, highlight_self=False):
+        def get_area_info(self, area_id, highlight_self=False, hub=None):
             """
             Get information about a specific area.
             :param area_id: area ID
@@ -1218,7 +1318,10 @@ class ClientManager:
             :highlight_self: highlight the area where we're located
             """
             info = ""
-            area = self.area.area_manager.get_area_by_id(area_id)
+            if hub is None:
+                area = self.area.area_manager.get_area_by_id(area_id)
+            else:
+                area = hub.areas[area_id]
             status = ""
             if self.area.area_manager.arup_enabled:
                 status = f" [{area.status}]"
@@ -1259,9 +1362,12 @@ class ClientManager:
             info += f"[{area.id}] {area.name}{users}{status}{owner}{hidden}{locked}{pathlocked}{passworded}{muted}{dark}"
             return info
 
-        def get_area_clients(self, area_id, mods=False, afk_check=False):
+        def get_area_clients(self, area_id, mods=False, afk_check=False, show_links=False, hub=None):
             info = ""
-            area = self.area.area_manager.get_area_by_id(area_id)
+            if hub is None:
+                area = self.area.area_manager.get_area_by_id(area_id)
+            else:
+                area = hub.areas[area_id]
             if afk_check:
                 player_list = area.afkers
             else:
@@ -1331,9 +1437,11 @@ class ClientManager:
                     info += f" ({c.ipid})"
                 if c.name != "" and (self.is_mod or self in area.owners):
                     info += f": {c.name}"
+                if show_links and c.char_url != "":
+                    info += f" < {c.char_url} >"
             return info
 
-        def send_areas_clients(self, mods=False, afk_check=False):
+        def send_areas_clients(self, mods=False, afk_check=False, show_links=False):
             """
             Send information over OOC about all areas of the client's hub.
             :param area_id: area ID
@@ -1368,7 +1476,7 @@ class ClientManager:
                     continue
 
                 try:
-                    area_info += self.get_area_clients(i, mods, afk_check)
+                    area_info += self.get_area_clients(i, mods, afk_check, show_links)
                 except ClientError:
                     area_info = ""
                 if area_info == "":
@@ -1386,7 +1494,77 @@ class ClientManager:
                 info += f"Current online: {cnt}"
             self.send_ooc(info)
 
-        def send_area_info(self, area_id, mods=False, afk_check=False):
+        def send_hubs_clients(self, mods=False, afk_check=False, show_links=False):
+            """
+            Send information over OOC about all hubs.
+            """
+            if (
+                not self.is_mod
+                and self not in self.area.area_manager.owners
+                and self.char_id != -1
+            ):
+                if self.blinded:
+                    raise ClientError("You are blinded!")
+                if not self.server.config["can_gethubs"]:
+                    raise ClientError(
+                        "In this server it is not allowed to use the command /gethubs!"
+                    )
+            cnt = 0
+            info = "\n🗺️ Clients in Hubs 🗺️\n"
+            for hub in self.server.hub_manager.hubs:
+                hub_info = ""
+                if (
+                    (not hub.can_getareas or hub.hide_clients)
+                    and not self.is_mod
+                    and self not in hub.owners
+                ):
+                    info += f"\n⛩[{hub.id}]{hub.name}⛩: ❌\n"
+                else:
+                    for i in range(len(hub.areas)):
+                        area = hub.areas[i]
+                        if afk_check:
+                            client_list = area.afkers
+                        else:
+                            client_list = area.clients
+                        if not self.is_mod and self not in area.owners:
+                            # We exclude hidden players here because we don't want them to count for the user count
+                            client_list = [c for c in client_list if not c.hidden]
+
+                        area_info = f"{self.get_area_info(i, hub=hub)}:"
+                        if area_info == "":
+                            continue
+
+                        try:
+                            area_info += self.get_area_clients(
+                                i, mods, afk_check, show_links, hub=hub
+                            )
+                        except ClientError:
+                            area_info = ""
+                        if area_info == "":
+                            continue
+
+                        if len(client_list) > 0 or len(area.owners) > 0:
+                            cnt += len(client_list)
+                            hub_info += f"{area_info}\n"
+                if not hub_info == "" and (
+                    hub.can_getareas or self.is_mod or self in hub.owners
+                ):
+                    if not self.is_mod and self not in hub.owners:
+                        hub_count = 0
+                        for area in hub.areas:
+                            if not area.hide_clients and not area.dark:
+                                player_list = [c for c in area.clients if not c.hidden]
+                                hub_count += len(player_list)
+                        info += f"\n⛩[{hub.id}]{hub.name} (users: {hub_count})⛩:\n{hub_info}\n"
+                    else:
+                        info += f"\n⛩[{hub.id}]{hub.name} (users: {len(hub.clients)})⛩:\n{hub_info}\n"
+            if afk_check:
+                info += f"Current AFK-ers: {cnt}"
+            else:
+                info += f"Current online: {cnt}"
+            self.send_ooc(info)
+
+        def send_area_info(self, area_id, mods=False, afk_check=False, show_links=False):
             """
             Send information over OOC about a specific area.
             :param area_id: area ID
@@ -1399,7 +1577,7 @@ class ClientManager:
                     raise ClientError("You are blinded!")
             area_info = f'📍 Clients in {self.get_area_info(area_id)} 📍'
             try:
-                area_info += self.get_area_clients(area_id, mods, afk_check)
+                area_info += self.get_area_clients(area_id, mods, afk_check, show_links)
             except ClientError as ex:
                 area_info += f'\n{ex}'
             info += area_info
@@ -1443,6 +1621,19 @@ class ClientManager:
             self.area.area_manager.send_arup_status([self])
             self.area.area_manager.send_arup_cms([self])
             self.area.area_manager.send_arup_lock([self])
+
+            # Send user links of the lobby.
+
+            # Get all the clients in the current area, if they have their user link declared.
+            # While also not including ourselves.
+            clients = (c for c in self.area.clients if c.char_url != "" and c.id != self.id)
+
+            # Get the char_urls of the new area for this client.
+            for client in clients:
+                self.add_user_link(client.char_name, client.char_url)
+
+            # Send the server's declared links to the client.
+            self.send_server_link_list()
 
             self.send_command("DONE")
 
@@ -1505,6 +1696,33 @@ class ClientManager:
                 return "Spectator"
             if self.char_id >= len(self.area.area_manager.char_list):
                 return "Unknown"
+            return self.area.area_manager.char_list[self.char_id]
+
+        @property
+        def f_char_name_raw(self):
+            """Get the name of either the character that the client is using or the iniswap."""
+            if self.iniswap != "":
+                return self.iniswap
+
+            if (    self.char_id is None
+                or  self.char_id <= -1
+                or  self.char_id >= len(self.area.area_manager.char_list)):
+                return ""
+
+            return self.area.area_manager.char_list[self.char_id]
+        @property
+        def f_char_name(self):
+            """Get the name of either the character that the client is using or the iniswap."""
+            if self.iniswap != "":
+                return self.iniswap
+
+            if self.char_id is None:
+                return "Connection"
+            if self.char_id == -1:
+                return "Spectator"
+            if self.char_id >= len(self.area.area_manager.char_list):
+                return "Unknown"
+
             return self.area.area_manager.char_list[self.char_id]
 
         @property
@@ -1767,6 +1985,16 @@ class ClientManager:
             if c.following == client:
                 c.unfollow()
         self.clients.remove(client)
+
+        # TODO: Maybe take into account than sending the "CU" packet can reveal your cover.
+        # So you could simply treat the hidden client as if they didn't declare their char_url.
+        # Probably using a bool for it.
+
+        # Removes the client's user link from the area it was.
+        if client.char_url != "":
+            clients = (c for c in client.area.clients if c.id != client.id)
+            for c in clients:
+                c.remove_user_link(client.char_name)
         for hub in self.server.hub_manager.hubs:
             count = 0
             for c in hub.clients:
@@ -1786,7 +2014,7 @@ class ClientManager:
                     ],
                 )
 
-    def get_targets(self, client, key, value, local=False, single=False):
+    def get_targets(self, client, key, value, local=False, single=False, all_hub=False):
         """
         Find players by a combination of identifying data.
         Possible keys: player ID, OOC name, character name, HDID, IPID,
@@ -1797,36 +2025,41 @@ class ClientManager:
         :param value: data identifying a client
         :param local: search in current area only (Default value = False)
         :param single: search only a single user (Default value = False)
+        :param all_hub: search in all hubs (Default value = False)
         """
-        areas = None
-        if local:
-            areas = [client.area]
-        else:
-            areas = client.area.area_manager.areas
         targets = []
         if key == TargetType.ALL:
             for nkey in range(6):
                 targets += self.get_targets(client, nkey, value, local)
-        for area in areas:
-            for client in area.clients:
-                if key == TargetType.IP:
-                    if value.lower().startswith(client.ip.lower()):
-                        targets.append(client)
-                elif key == TargetType.OOC_NAME:
-                    if value.lower().startswith(client.name.lower()) and client.name:
-                        targets.append(client)
-                elif key == TargetType.CHAR_NAME:
-                    if value.lower().startswith(client.char_name.lower()):
-                        targets.append(client)
-                elif key == TargetType.ID:
-                    if client.id == value:
-                        targets.append(client)
-                elif key == TargetType.IPID:
-                    if client.ipid == value:
-                        targets.append(client)
-                elif key == TargetType.AFK:
-                    if client in area.afkers:
-                        targets.append(client)
+        if all_hub and not local:
+            hubs = self.server.hub_manager.hubs
+        else:
+            hubs = [client.area.area_manager]
+        for hub in hubs:
+            if local:
+                areas = [client.area]
+            else:
+                areas = hub.areas
+            for area in areas:
+                for client in area.clients:
+                    if key == TargetType.IP:
+                        if value.lower().startswith(client.ip.lower()):
+                            targets.append(client)
+                    elif key == TargetType.OOC_NAME:
+                        if value.lower().startswith(client.name.lower()) and client.name:
+                            targets.append(client)
+                    elif key == TargetType.CHAR_NAME:
+                        if value.lower().startswith(client.char_name.lower()):
+                            targets.append(client)
+                    elif key == TargetType.ID:
+                        if client.id == value:
+                             targets.append(client)
+                    elif key == TargetType.IPID:
+                        if client.ipid == value:
+                            targets.append(client)
+                    elif key == TargetType.AFK:
+                        if client in area.afkers:
+                            targets.append(client)
         return targets
 
     def get_muted_clients(self):

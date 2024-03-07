@@ -1,22 +1,3 @@
-# KFO-Server, an Attorney Online server
-#
-# Copyright (C) 2020 Crystalwarrior <varsash@gmail.com>
-#
-# Derivative of tsuserver3, an Attorney Online server. Copyright (C) 2016 argoneus <argoneuscze@gmail.com>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-#
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 from server import commands
 from server.exceptions import ClientError, AreaError, ArgumentError, ServerError
 from server.area import Area
@@ -27,7 +8,7 @@ import os
 import datetime
 import logging
 
-logger = logging.getLogger("events")
+logger = logging.getLogger("areamanager")
 
 
 class AreaManager:
@@ -95,7 +76,7 @@ class AreaManager:
                     self.caller.send_ooc(
                         f"[Timer 0] An internal error occurred: {ex}. Please inform the staff of the server about the issue."
                     )
-                    logger.exception("Exception while running a command")
+                    logger.error("Exception while running a command")
                     # Command execution critically failed somewhere. Clear out all commands so the timer doesn't screw with us.
                     self.commands.clear()
                     # Even tho self.commands.clear() is going to break us out of the while loop, manually return anyway just to be safe.
@@ -144,6 +125,15 @@ class AreaManager:
         self.subtheme = ""
 
         self.timer = self.Timer()
+        
+        # RPS-5 rules as default
+        self.rps_rules = [
+            ["rock", "scissors", "lizard"],
+            ["paper", "rock", "spock"],
+            ["scissors", "paper", "lizard"],
+            ["lizard", "paper", "spock"],
+            ["spock", "scissors", "rock"],
+        ]
 
     @property
     def name(self):
